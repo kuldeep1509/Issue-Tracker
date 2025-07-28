@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q # For complex lookups (OR conditions)
+from django.db.models import Q # Q object: Lets you use OR logic in queries
 from .models import Issue
 from .serializers import IssueSerializer, SimpleUserSerializer,CustomCurrentUserSerializer # Use SimpleUserSerializer for user lists
 from .permissions import IsOwnerOrReadOnly
