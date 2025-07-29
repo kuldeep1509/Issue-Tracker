@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
     const { isAuthenticated, logout, user } = useAuth();
-    const navigate = useNavigate();
+   
 
     const handleLogout = () => {
         logout(); // This will also navigate to /login due to AuthContext

@@ -52,7 +52,7 @@ const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
             console.warn("Unexpected API response structure for issues:", response.data);
             setIssues([]); // Ensure issues is an array to prevent filter error
         }
-        // --- FIX ENDS HERE ---
+   
     } catch (err) {
         console.error('Failed to fetch issues:', err.response?.data || err.message);
         setError('Failed to load issues. Please try again.');

@@ -23,7 +23,7 @@ urlpatterns = [
 
     # Djoser Authentication URLs
     # This includes core user endpoints like /auth/users/ (for registration),
-    # /auth/users/me/, /auth/users/set_password/, etc.
+
     path('api/auth/', include('djoser.urls')),
 
     # Djoser JWT Authentication URLs

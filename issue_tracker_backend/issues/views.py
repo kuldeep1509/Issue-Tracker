@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q # Q object: Lets you use OR logic in queries
 from .models import Issue
-from .serializers import IssueSerializer, SimpleUserSerializer,CustomCurrentUserSerializer # Use SimpleUserSerializer for user lists
+from .serializers import IssueSerializer, SimpleUserSerializer# Use SimpleUserSerializer for user lists
 from .permissions import IsOwnerOrReadOnly
 from django.contrib.auth import get_user_model
 
@@ -55,7 +55,7 @@ class IssueViewSet(viewsets.ModelViewSet):
             Q(owner=request.user) | Q(assigned_to=request.user)
         ).distinct()
         
-        status_filter = self.request.query_params.get('status', None)
+        status_filter = self.request.query_params.get('status', None) # GET STATUS FROM QUERY PARAMS
         if status_filter:
             user_issues = user_issues.filter(status__iexact=status_filter)
             
@@ -88,7 +88,7 @@ class IssueViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        assigned_to_id = request.data.get('assigned_to_id')
+        assigned_to_id = request.data.get('assigned_to_id')#Expects frontend to send the assigned_to_id (user’s ID)
 
         if assigned_to_id is None: # Allow unassigning by sending null/empty string
             issue.assigned_to = None
