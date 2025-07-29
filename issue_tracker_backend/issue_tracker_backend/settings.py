@@ -33,7 +33,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 # CRITICAL FIX: Corrected ALLOWED_HOSTS for production security
-ALLOWED_HOSTS = [] # Always start with an empty list for security
+ALLOWED_HOSTS = ['https://issue-tracker-chi-swart.vercel.app','https://issue-tracker-s3ys.onrender.com'] # Always start with an empty list for security
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     # Render's hostname, e.g., 'issue-tracker-s3ys.onrender.com'
