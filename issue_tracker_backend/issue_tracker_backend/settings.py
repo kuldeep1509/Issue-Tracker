@@ -220,13 +220,7 @@ SIMPLE_JWT = {
 
 # --- CORS HEADERS SETTINGS ---
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # For local React development (Vite)
-    "https://issue-tracker-chi-swart.vercel.app", # Your deployed Vercel frontend URL
-    # If your Vercel URL might sometimes include a trailing slash depending on how it's accessed,
-    # you can optionally add both versions for robustness:
-    # "https://issue-tracker-chi-swart.vercel.app/",
-]
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "https://issue-tracker-chi-swart.vercel.app"]
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
