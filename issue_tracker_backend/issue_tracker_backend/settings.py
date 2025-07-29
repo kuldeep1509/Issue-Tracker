@@ -216,7 +216,7 @@ SIMPLE_JWT = {
 # --- CORS HEADERS SETTINGS ---
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Common for Vite (for local dev)
+    "https://issue-tracker-chi-swart.vercel.app/", # Common for Vite (for local dev)
     # NEW: Add your frontend's Render URL here for production
     # Example: "https://your-frontend-app.onrender.com"
     # Make sure it uses HTTPS in production
