@@ -100,7 +100,7 @@ WSGI_APPLICATION = 'issue_tracker_backend.wsgi.application'
 # MODIFIED: Use Render's DATABASE_URL env var for production
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'postgresql://postgres:123@localhost:5432/issue_tracker_db', # Local DB URL
+        default=f'postgresql://employee_db_l1xe_user:NfUWWQY8fpQNG5dw3brvDMfC8SbsJNMn@dpg-d20dnqmuk2gs73c65tn0-a.oregon-postgres.render.com/employee_db_l1xe', # Local DB URL
         conn_max_age=600 # Optional: Reconnect after 10 mins idle
     )
 }
