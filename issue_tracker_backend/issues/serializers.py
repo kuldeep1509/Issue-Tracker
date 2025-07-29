@@ -46,10 +46,9 @@ class IssueSerializer(serializers.ModelSerializer): #handles reading and writing
         read_only_fields = ['owner', 'created_at', 'updated_at'] # Owner is set automatically by the view
 
     def create(self, validated_data):
-        # The owner is automatically set by the view's perform_create method
+      
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # If assigned_to_id is provided, update the assigned_to field
-        # The 'source' argument in PrimaryKeyRelatedField handles mapping 'assigned_to_id' to 'assigned_to'
+       
         return super().update(instance, validated_data)

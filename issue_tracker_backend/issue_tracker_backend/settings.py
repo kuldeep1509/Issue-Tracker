@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os # NEW: Import the os module
+from decouple import config # NEW: Import config from python-decouple
+import dj_database_url # NEW: Import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +24,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s3qna+j6&!r%hog+96-!)fahtebtb093s502u%a%6i!5_s&#i8'
+# MODIFIED: Load SECRET_KEY from environment variable for production
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)fahtebtb093s502u%a%6i!5_s&#i8') # Fallback for local dev
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# MODIFIED: Load DEBUG from env, default True for local
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = []
+# MODIFIED: Use environment variable for Render and fall back to empty list for local
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+ALLOWED_HOSTS.append('127.0.0.1') # Always allow localhost for local dev
+# NEW: Add your custom backend domain here if you set one up in Render (e.g., "yourbackend.com")
+# ALLOWED_HOSTS.append('yourbackend.com')
 
 
 # Application definition
@@ -42,11 +55,15 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_simplejwt',
     'corsheaders',
+    # NEW: Add Whitenoise for static file serving in production
+    'whitenoise.runserver_nostatic', # For local dev serving static files with Whitenoise
     'issues.apps.IssuesConfig'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # NEW: Add Whitenoise middleware - MUST be right after SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -65,6 +82,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug', # NEW: Recommended for context
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -79,15 +97,12 @@ WSGI_APPLICATION = 'issue_tracker_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# MODIFIED: Use Render's DATABASE_URL env var for production
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'issue_tracker_db',      # Your PostgreSQL database name
-        'USER': 'postgres',          # Your PostgreSQL username
-        'PASSWORD': '123',  # Your PostgreSQL password
-        'HOST': 'localhost',             # Or your database host (e.g., '127.0.0.1')
-        'PORT': '5432',                  # Default PostgreSQL port
-    }
+    'default': dj_database_url.config(
+        default=f'postgresql://postgres:123@localhost:5432/issue_tracker_db', # Local DB URL
+        conn_max_age=600 # Optional: Reconnect after 10 mins idle
+    )
 }
 
 
@@ -126,28 +141,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# NEW: Configure Whitenoise to use compressed and hashed static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CONSOLIDATED: Removed duplicate REST_FRAMEWORK block
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication', # Recommended for browsable API
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', # Default to require authentication for all views
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10, # Optional: For pagination on lists
-}
-
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',#This tells DRF how to identify a user from an incoming request (e.g., by looking for a token in the Authorization header). 
         'rest_framework.authentication.SessionAuthentication', # Recommended for browsable API
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -164,20 +171,19 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False, # Set to True if you want email activation
     'SEND_CONFIRMATION_EMAIL': False, # Set to True if you want confirmation email
     'USER_ID_FIELD': 'username', # Djoser uses this field for internal user ID representation
-    'LOGIN_FIELD': 'username',   # IMPORTANT: Users will log in with their username and password
+    'LOGIN_FIELD': 'username', # IMPORTANT: Users will log in with their username and password
     'PERMISSIONS': { # Optional: Override Djoser's default permissions if needed
         'user_list': ['rest_framework.permissions.IsAdminUser'], # Only admins can list all users
         'user_detail': ['rest_framework.permissions.IsAuthenticated'], # Authenticated users can see their own details
     },
     'SERIALIZERS': {
-     
         'current_user': 'issues.serializers.CustomCurrentUserSerializer',
     },
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Access token validity (1 hour)
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Refresh token validity (7 days)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),# Refresh token validity (7 days)
     'ROTATE_REFRESH_TOKENS': True, # New refresh token is issued with each refresh request
     'BLACKLIST_AFTER_ROTATION': True, # Old refresh tokens are blacklisted
     'UPDATE_LAST_LOGIN': True, # Update last_login field on user model
@@ -208,14 +214,14 @@ SIMPLE_JWT = {
 
 
 # --- CORS HEADERS SETTINGS ---
-# For development, allow all origins. In production, restrict to your frontend domain(s).
-CORS_ALLOW_ALL_ORIGINS = False # Set to False in production
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    
-    "http://localhost:5173", # Common for Vite
-    # Add other specific frontend origins here in production, e.g., "https://yourfrontend.com"
+    "http://localhost:5173", # Common for Vite (for local dev)
+    # NEW: Add your frontend's Render URL here for production
+    # Example: "https://your-frontend-app.onrender.com"
+    # Make sure it uses HTTPS in production
 ]
-CORS_ALLOW_CREDENTIALS = True # Allow cookies/authentication headers to be sent cross-origin
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
     'accept',
