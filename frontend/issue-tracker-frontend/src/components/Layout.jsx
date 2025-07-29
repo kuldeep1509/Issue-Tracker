@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Link to="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>
                             Issue Tracker
                         </Link>
                     </Typography>

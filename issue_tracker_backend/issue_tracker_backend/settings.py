@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',#This tells DRF how to identify a user from an incoming request (e.g., by looking for a token in the Authorization header). 
         'rest_framework.authentication.SessionAuthentication', # Recommended for browsable API
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -170,10 +170,8 @@ DJOSER = {
         'user_detail': ['rest_framework.permissions.IsAuthenticated'], # Authenticated users can see their own details
     },
     'SERIALIZERS': {
-        # IMPORTANT: Commented out custom serializers for initial setup to ensure Djoser defaults work.
-        # Uncomment and configure these ONLY AFTER successful registration/login with defaults.
-        # 'user_create': 'issues.serializers.UserCreateSerializer',
-        'current_user': 'issues.serializers.CustomCurrentUserSerializer'
+     
+        'current_user': 'issues.serializers.CustomCurrentUserSerializer',
     },
 }
 
