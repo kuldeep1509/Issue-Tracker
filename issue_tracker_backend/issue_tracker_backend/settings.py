@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os # NEW: Import the os module
-from decouple import config # NEW: Import config from python-decouple
-import dj_database_url # NEW: Import dj_database_url
+import os
+from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,14 +32,17 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 # MODIFIED: Load DEBUG from env, default True for local
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
-# MODIFIED: Use environment variable for Render and fall back to empty list for local
+# CRITICAL FIX: Corrected ALLOWED_HOSTS for production security
+ALLOWED_HOSTS = [] # Always start with an empty list for security
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
+    # Render's hostname, e.g., 'issue-tracker-s3ys.onrender.com'
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-ALLOWED_HOSTS.append('https://issue-tracker-s3ys.onrender.com') # Always allow localhost for local dev
-# NEW: Add your custom backend domain here if you set one up in Render (e.g., "yourbackend.com")
-# ALLOWED_HOSTS.append('yourbackend.com')
+ALLOWED_HOSTS.append('127.0.0.1') # For local development
+# No need to append 'https://issue-tracker-s3ys.onrender.com' explicitly
+# as RENDER_EXTERNAL_HOSTNAME covers it. Also, ALLOWED_HOSTS should not include scheme.
+# NEW: Add your custom backend domain here if you set one up in Render (e.g., "api.yourdomain.com")
+# ALLOWED_HOSTS.append('api.yourdomain.com')
 
 
 # Application definition
@@ -100,7 +103,10 @@ WSGI_APPLICATION = 'issue_tracker_backend.wsgi.application'
 # MODIFIED: Use Render's DATABASE_URL env var for production
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'postgresql://employee_db_l1xe_user:NfUWWQY8fpQNG5dw3brvDMfC8SbsJNMn@dpg-d20dnqmuk2gs73c65tn0-a.oregon-postgres.render.com/employee_db_l1xe', # Local DB URL
+        # WARNING: Hardcoding sensitive database credentials in 'default' is a security risk.
+        # This will only be used if the DATABASE_URL environment variable is NOT set on Render.
+        # Ideally, this 'default' should be a local development database or removed if purely env-driven.
+        default='postgresql://employee_db_l1xe_user:NfUWWQY8fpQNG5dw3brvDMfC8SbsJNMn@dpg-d20dnqmuk2gs73c65tn0-a.oregon-postgres.render.com/employee_db_l1xe',
         conn_max_age=600 # Optional: Reconnect after 10 mins idle
     )
 }
@@ -151,7 +157,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CONSOLIDATED: Removed duplicate REST_FRAMEWORK block
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -216,10 +221,11 @@ SIMPLE_JWT = {
 # --- CORS HEADERS SETTINGS ---
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://issue-tracker-chi-swart.vercel.app/", # Common for Vite (for local dev)
-    # NEW: Add your frontend's Render URL here for production
-    # Example: "https://your-frontend-app.onrender.com"
-    # Make sure it uses HTTPS in production
+    "http://localhost:5173", # For local React development (Vite)
+    "https://issue-tracker-chi-swart.vercel.app", # Your deployed Vercel frontend URL
+    # If your Vercel URL might sometimes include a trailing slash depending on how it's accessed,
+    # you can optionally add both versions for robustness:
+    # "https://issue-tracker-chi-swart.vercel.app/",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
