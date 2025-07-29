@@ -13,6 +13,7 @@ import api from '../services/api';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const ItemTypes = {
     ISSUE: 'issue'
@@ -22,6 +23,7 @@ const ISSUE_STATUSES = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 
 const Dashboard = () => {
     const { user, isAuthenticated } = useAuth();
+    console.log(user)
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -29,6 +31,7 @@ const Dashboard = () => {
     const [currentIssue, setCurrentIssue] = useState(null);
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [openInviteModal, setOpenInviteModal] = useState(false);
+
 
 const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
     setLoading(true);
@@ -66,8 +69,8 @@ const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
         if (isAuthenticated) {
             fetchIssues(filterStatus);
             // Polling for real-time updates (can be replaced by WebSockets for better performance)
-            const interval = setInterval(() => fetchIssues(filterStatus), 30000); // Poll every 30 seconds
-            return () => clearInterval(interval);
+            
+            
         }
     }, [isAuthenticated, filterStatus, fetchIssues]);
 
@@ -111,7 +114,7 @@ const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
 
         // Frontend permission check (backend has the final say)
         if (issueToMove.owner.id !== user.id && !user.is_staff) {
-            setError('You can only update your own issues or be an administrator to move issues.');
+            alert("Only admin can modify the status")
             return;
         }
 

@@ -1,6 +1,7 @@
 // src/components/IssueModal.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
+    Typography,
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Select, MenuItem, FormControl, InputLabel,
     CircularProgress, Box, Alert
@@ -32,10 +33,15 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             .string()
             .oneOf(['OPEN', 'IN_PROGRESS', 'CLOSED'], 'Invalid status selected')
             .required('Status is required'),
+        // assigned_to_id can be 0 for "None" or a number for a user ID
         assigned_to_id: yup
-            .number() // Expects a number (user ID)
-            .nullable() // Allows null for unassigned
-            .notRequired(), // Not required to be filled
+            .number()
+            .nullable()
+            .transform((value, originalValue) => {
+                // Transform "NONE" string or empty string to null/0 for number type
+                return originalValue === 'NONE' || originalValue === '' ? null : value;
+            })
+            .notRequired('Assignment is optional'), // Not strictly required
     });
 
     // Initialize Formik
@@ -44,7 +50,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             title: '',
             description: '',
             status: 'OPEN',
-            assigned_to_id: '', // Use empty string for Select's initial "None" value
+            assigned_to_id: 'NONE', // Use a specific string 'NONE' for the initial "None" option in Select
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
@@ -52,8 +58,8 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             setError('');
 
             const dataToSend = { ...values };
-            // Convert empty string from Select to null for backend if not assigned
-            if (dataToSend.assigned_to_id === '') {
+            // Convert 'NONE' string from Select to null for backend if not assigned
+            if (dataToSend.assigned_to_id === 'NONE' || dataToSend.assigned_to_id === '') {
                 dataToSend.assigned_to_id = null;
             }
 
@@ -69,7 +75,29 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                 handleCloseModal(); // Close modal and reset form
             } catch (err) {
                 console.error('Error saving issue:', err.response?.data || err);
-                setError(err.response?.data?.detail || 'Failed to save issue. Check your input and permissions.');
+                const serverErrors = err.response?.data;
+                let errorMessage = 'Failed to save issue. Check your input and permissions.';
+
+                if (typeof serverErrors === 'object' && serverErrors !== null) {
+                    const errorMessages = Object.keys(serverErrors)
+                        .map(key => {
+                            const errorValue = serverErrors[key];
+                            if (Array.isArray(errorValue)) {
+                                return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${errorValue.join(', ')}`;
+                            } else if (typeof errorValue === 'string') {
+                                return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${errorValue}`;
+                            }
+                            return ''; // Fallback for unexpected types
+                        })
+                        .filter(msg => msg !== '') // Remove empty messages
+                        .join('; ');
+                    errorMessage = `Failed to save issue: ${errorMessages || 'Unknown server error.'}`;
+                } else if (typeof serverErrors === 'string') {
+                    errorMessage = `An unexpected server error occurred: ${serverErrors}`;
+                } else if (err.message) {
+                    errorMessage = `Network error: ${err.message}`;
+                }
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -85,7 +113,8 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                     title: issue.title,
                     description: issue.description || '', // Ensure description is string or empty
                     status: issue.status,
-                    assigned_to_id: issue.assigned_to?.id || '', // Set to ID or empty string
+                    // Use 'NONE' for Select if assigned_to is null, otherwise the ID
+                    assigned_to_id: issue.assigned_to?.id ? issue.assigned_to.id : 'NONE',
                 }, false); // false means don't validate immediately on setValues
             } else {
                 // Reset form for creating a new issue
@@ -116,7 +145,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
 
     // Custom handleClose to reset form when modal is closed (e.g., by clicking outside or cancel button)
     const handleCloseModal = () => {
-
+        formik.resetForm(); // Reset Formik state, including touched and errors
         setError(''); // Clear any API error messages
         handleClose(); // Call the parent's handleClose prop
     };
@@ -130,7 +159,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             <DialogTitle>{issue ? 'Edit Issue' : 'Create New Issue'}</DialogTitle>
             <DialogContent>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                
+
                 <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ mt: 2 }}>
                     {/* Title Field */}
                     <TextField
@@ -139,10 +168,10 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                         type="text"
                         fullWidth
                         variant="outlined"
-                        name="title" // Crucial: name must match Formik's initialValues key
+                        name="title"
                         value={formik.values.title}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur} // Important for validation on blur
+                        onBlur={formik.handleBlur}
                         error={formik.touched.title && Boolean(formik.errors.title)}
                         helperText={formik.touched.title && formik.errors.title}
                         required
@@ -158,7 +187,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                         multiline
                         rows={4}
                         variant="outlined"
-                        name="description" // Crucial: name must match Formik's initialValues key
+                        name="description"
                         value={formik.values.description}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -175,11 +204,11 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                         <Select
                             labelId="status-label"
                             id="status"
-                            name="status" // Crucial: name must match Formik's initialValues key
+                            name="status"
                             value={formik.values.status}
                             label="Status"
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur} // Important for validation on blur
+                            onBlur={formik.handleBlur}
                         >
                             <MenuItem value="OPEN">Open</MenuItem>
                             <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
@@ -201,7 +230,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                             <Select
                                 labelId="assigned-to-label"
                                 id="assigned_to_id"
-                                name="assigned_to_id" // Crucial: name must match Formik's initialValues key
+                                name="assigned_to_id"
                                 value={formik.values.assigned_to_id}
                                 label="Assigned To"
                                 onChange={formik.handleChange}
@@ -209,7 +238,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                                 displayEmpty
                             >
                                 <MenuItem value="NONE">
-                                    NONE
+                                    <em>None</em> {/* Changed from 0 to 'NONE' for clarity/consistency */}
                                 </MenuItem>
                                 {users.map(u => (
                                     <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
@@ -229,9 +258,9 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                     Cancel
                 </Button>
                 <Button
-                    onClick={formik.handleSubmit} // This triggers Formik's validation and then onSubmit
+                    onClick={formik.handleSubmit}
                     variant="contained"
-                    disabled={loading || !formik.isValid || !formik.dirty} // Disable if loading, form invalid, or no changes
+                    disabled={loading || !formik.isValid || !formik.dirty}
                 >
                     {loading ? <CircularProgress size={24} /> : (issue ? 'Update' : 'Create')}
                 </Button>
