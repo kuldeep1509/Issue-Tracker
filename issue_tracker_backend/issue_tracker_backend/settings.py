@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os
-from decouple import config
-import dj_database_url
+import os # NEW: Import the os module
+from decouple import config # NEW: Import config from python-decouple
+import dj_database_url # NEW: Import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,14 +32,14 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 # MODIFIED: Load DEBUG from env, default True for local
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-# REFINED: Corrected and more robust ALLOWED_HOSTS for production security
-ALLOWED_HOSTS = ['127.0.0.1'] # Always allow localhost for local dev
+ALLOWED_HOSTS = ["*"]
+# MODIFIED: Use environment variable for Render and fall back to empty list for local
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
-    # Render's hostname, e.g., 'issue-tracker-s3ys.onrender.com'
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-# NEW: Add Vercel wildcard for frontend to allow all Vercel preview/production domains
-ALLOWED_HOSTS.append('.vercel.app')
+ALLOWED_HOSTS.append('https://issue-tracker-s3ys.onrender.com') # Always allow localhost for local dev
+# NEW: Add your custom backend domain here if you set one up in Render (e.g., "yourbackend.com")
+# ALLOWED_HOSTS.append('yourbackend.com')
 
 
 # Application definition
@@ -65,7 +65,7 @@ MIDDLEWARE = [
     # NEW: Add Whitenoise middleware - MUST be right after SecurityMiddleware
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware', # This order is correct and important
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -82,7 +82,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
+                'django.template.context_processors.debug', # NEW: Recommended for context
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -100,10 +100,7 @@ WSGI_APPLICATION = 'issue_tracker_backend.wsgi.application'
 # MODIFIED: Use Render's DATABASE_URL env var for production
 DATABASES = {
     'default': dj_database_url.config(
-        # WARNING: Hardcoding sensitive database credentials in 'default' is a security risk.
-        # This will only be used if the DATABASE_URL environment variable is NOT set on Render.
-        # Ideally, this 'default' should be a local development database or removed if purely env-driven.
-        default='postgresql://issue_tracker_db_xysk_user:GxBrsuP1qXg6gge5UNsZBTdOpVZAXm6y@dpg-d24chpqli9vc73cklr8g-a.oregon-postgres.render.com/issue_tracker_db_xysk',
+        default=f'postgresql://issue_tracker_db_xysk_user:GxBrsuP1qXg6gge5UNsZBTdOpVZAXm6y@dpg-d24chpqli9vc73cklr8g-a.oregon-postgres.render.com/issue_tracker_db_xysk', # Local DB URL
         conn_max_age=600 # Optional: Reconnect after 10 mins idle
     )
 }
@@ -146,9 +143,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # NEW: Configure Whitenoise to use compressed and hashed static files in production
-# This ensures it's only active for production if DEBUG is False
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Default primary key field type
@@ -156,6 +151,7 @@ if not DEBUG:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CONSOLIDATED: Removed duplicate REST_FRAMEWORK block
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -218,10 +214,13 @@ SIMPLE_JWT = {
 
 
 # --- CORS HEADERS SETTINGS ---
-CORS_ALLOW_ALL_ORIGINS = False # Keep this False for security!
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # For local React development (Vite)
-    "https://issue-tracker-chi-swart.vercel.app", # Your deployed Vercel frontend URL
+    "http://localhost:5173", # Common for Vite (for local dev)
+    'https://issue-tracker-chi-swart.vercel.app'
+    # NEW: Add your frontend's Render URL here for production
+    # Example: "https://your-frontend-app.onrender.com"
+    # Make sure it uses HTTPS in production
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -235,10 +234,4 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-]
-
-# NEW: Add CSRF_TRUSTED_ORIGINS, crucial for cookie-based authentication and secure POST requests
-CSRF_TRUSTED_ORIGINS = [
-    "https://issue-tracker-s3ys.onrender.com", # Your backend's Render URL (without /api path)
-    "https://issue-tracker-chi-swart.vercel.app", # Your frontend's Vercel URL
 ]
