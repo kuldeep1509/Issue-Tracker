@@ -32,7 +32,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 # MODIFIED: Load DEBUG from env, default True for local
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 # MODIFIED: Use environment variable for Render and fall back to empty list for local
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
