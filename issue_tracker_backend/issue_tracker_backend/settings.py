@@ -32,17 +32,14 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 # MODIFIED: Load DEBUG from env, default True for local
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-# CRITICAL FIX: Corrected ALLOWED_HOSTS for production security
-ALLOWED_HOSTS = ['https://issue-tracker-chi-swart.vercel.app','https://issue-tracker-s3ys.onrender.com'] # Always start with an empty list for security
+# REFINED: Corrected and more robust ALLOWED_HOSTS for production security
+ALLOWED_HOSTS = ['127.0.0.1'] # Always allow localhost for local dev
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     # Render's hostname, e.g., 'issue-tracker-s3ys.onrender.com'
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-ALLOWED_HOSTS.append('127.0.0.1') # For local development
-# No need to append 'https://issue-tracker-s3ys.onrender.com' explicitly
-# as RENDER_EXTERNAL_HOSTNAME covers it. Also, ALLOWED_HOSTS should not include scheme.
-# NEW: Add your custom backend domain here if you set one up in Render (e.g., "api.yourdomain.com")
-# ALLOWED_HOSTS.append('api.yourdomain.com')
+# NEW: Add Vercel wildcard for frontend to allow all Vercel preview/production domains
+ALLOWED_HOSTS.append('.vercel.app')
 
 
 # Application definition
@@ -68,7 +65,7 @@ MIDDLEWARE = [
     # NEW: Add Whitenoise middleware - MUST be right after SecurityMiddleware
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # This order is correct and important
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -85,7 +82,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug', # NEW: Recommended for context
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -106,7 +103,7 @@ DATABASES = {
         # WARNING: Hardcoding sensitive database credentials in 'default' is a security risk.
         # This will only be used if the DATABASE_URL environment variable is NOT set on Render.
         # Ideally, this 'default' should be a local development database or removed if purely env-driven.
-        default='postgresql://issue_tracker_db_xysk_user:GxBrsuP1qXg6gge5UNsZBTdOpVZAXm6y@dpg-d24chpqli9vc73cklr8g-a.oregon-postgres.render.com/issue_tracker_db_xysk',
+        default='postgresql://employee_db_l1xe_user:NfUWWQY8fpQNG5dw3brvDMfC8SbsJNMn@dpg-d20dnqmuk2gs73c65tn0-a.oregon-postgres.render.com/employee_db_l1xe',
         conn_max_age=600 # Optional: Reconnect after 10 mins idle
     )
 }
@@ -149,7 +146,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # NEW: Configure Whitenoise to use compressed and hashed static files in production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# This ensures it's only active for production if DEBUG is False
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Default primary key field type
@@ -219,8 +218,11 @@ SIMPLE_JWT = {
 
 
 # --- CORS HEADERS SETTINGS ---
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "https://issue-tracker-chi-swart.vercel.app"]
+CORS_ALLOW_ALL_ORIGINS = False # Keep this False for security!
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173", # For local React development (Vite)
+    "https://issue-tracker-chi-swart.vercel.app", # Your deployed Vercel frontend URL
+]
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
@@ -233,4 +235,10 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+]
+
+# NEW: Add CSRF_TRUSTED_ORIGINS, crucial for cookie-based authentication and secure POST requests
+CSRF_TRUSTED_ORIGINS = [
+    "https://issue-tracker-s3ys.onrender.com", # Your backend's Render URL (without /api path)
+    "https://issue-tracker-chi-swart.vercel.app", # Your frontend's Vercel URL
 ]
