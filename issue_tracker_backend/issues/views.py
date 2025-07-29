@@ -39,27 +39,28 @@ class IssueViewSet(viewsets.ModelViewSet):
                 user_specific_queryset = user_specific_queryset.filter(status__iexact=status_filter)
             return user_specific_queryset
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):#if a user create an issue then this method sets that user to owner
         """
         Set the owner of the issue to the currently authenticated user automatically.
         """
         serializer.save(owner=self.request.user)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def my_issues(self, request):
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])#custom endpoint
+    def my_issues(self, request):# This logic is responsible for returning a filtered list of issues that are either owned by or assigned to the current user — and it supports an optional status filter.
         """
         Custom endpoint to fetch issues owned by or assigned to the current user.
         This is essentially what get_queryset does for non-admins, but provided as a specific endpoint.
         """
+        #Give me all issues where the owner is the current user OR the issue is assigned_to the current user.
         user_issues = Issue.objects.filter(
             Q(owner=request.user) | Q(assigned_to=request.user)
         ).distinct()
         
-        status_filter = self.request.query_params.get('status', None) # GET STATUS FROM QUERY PARAMS
+        status_filter = self.request.query_params.get('status', None) # GET STATUS FROM QUERY PARAMS, If status isn't passed, it defaults to None
         if status_filter:
-            user_issues = user_issues.filter(status__iexact=status_filter)
+            user_issues = user_issues.filter(status__iexact=status_filter)#If the user passed a status like "open", "Open", or "OPEN" — this will still match "OPEN" in DB
             
-        serializer = self.get_serializer(user_issues, many=True)
+        serializer = self.get_serializer(user_issues, many=True)#sends issue object in json format m=true because it's a list of users
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
@@ -72,14 +73,14 @@ class IssueViewSet(viewsets.ModelViewSet):
         serializer = SimpleUserSerializer(users, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])# custom action applies to a single instance for paricular user like with id 5 in pk
     def assign(self, request, pk=None):
         """
         Assign an issue to a user.
         Only the owner of the issue or an admin can assign it.
         Expects 'assigned_to_id' in the request data.
         """
-        issue = self.get_object() # Get the specific issue instance
+        issue = self.get_object() # Get the specific issue instance using pk
 
         # Check if the requesting user is the owner of the issue OR an admin
         if not (issue.owner == request.user or request.user.is_staff):
@@ -100,5 +101,5 @@ class IssueViewSet(viewsets.ModelViewSet):
                 return Response({"detail": "Assigned user not found."}, status=status.HTTP_404_NOT_FOUND)
 
         issue.save()
-        serializer = self.get_serializer(issue) # Re-serialize the updated issue
+        serializer = self.get_serializer(issue)
         return Response(serializer.data)

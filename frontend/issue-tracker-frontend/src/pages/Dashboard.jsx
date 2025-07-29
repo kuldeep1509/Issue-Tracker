@@ -13,7 +13,7 @@ import api from '../services/api';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+
 
 const ItemTypes = {
     ISSUE: 'issue'
@@ -23,7 +23,7 @@ const ISSUE_STATUSES = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 
 const Dashboard = () => {
     const { user, isAuthenticated } = useAuth();
-    console.log(user)
+
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -42,8 +42,8 @@ const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
 
         const response = await api.get(endpoint, { params });
 
-        // --- FIX STARTS HERE ---
-        // Assuming your DRF backend uses pagination, response.data will be an object
+        
+        // DRF backend uses pagination, response.data will be an object
         // with a 'results' key containing the actual array of issues.
         if (response.data && Array.isArray(response.data.results)) {
             setIssues(response.data.results);

@@ -12,7 +12,7 @@ import { CssBaseline } from '@mui/material'; // Material-UI's CSS reset
 function App() {
     return (
         <Router>
-            <CssBaseline /> {/* Applies a consistent baseline CSS to all elements */}
+            <CssBaseline /> 
             <AuthProvider> {/* Provides authentication context to all child components */}
                 <Layout> {/* Global layout component for consistent header */}
                     <Routes>
