@@ -396,6 +396,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://issue-tracker-chi-swart.vercel.app",
+    "https://issue-tracker-q9v4.onrender.com"
 ]
 
 CORS_ALLOW_HEADERS = [
