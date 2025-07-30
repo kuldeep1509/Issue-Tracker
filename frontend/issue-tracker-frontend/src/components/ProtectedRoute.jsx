@@ -1,21 +1,28 @@
-// src/components/ProtectedRoute.js (or PrivateRoute.js as named before)
-import { useContext } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
-import { Box, CircularProgress } from '@mui/material'; // Import Material-UI components
+// src/components/ProtectedRoute.js
+
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { CircularProgress, Box } from '@mui/material'; // For a loading indicator
 
 const ProtectedRoute = () => {
-    const { isAuthenticated, loading } = useContext(AuthContext);
+  const { isAuthenticated, loading } = useAuth();
 
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+  if (loading) {
+    // Show a loading spinner while authentication status is being determined
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
+  // If not authenticated, redirect to the login page
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If authenticated, render the child routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
