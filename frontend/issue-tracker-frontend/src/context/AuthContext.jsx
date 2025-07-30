@@ -1,9 +1,10 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import Cookies from 'js-cookie';
-// Import the specific authentication functions from your new api.js
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getUsers } from '../services/api';
+// Import the specific authentication functions from your new api.js, including getMe
+import { login as apiLogin, register as apiRegister, logout as apiLogout, getMe } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify'; // Ensure toast is imported
 
 const AuthContext = createContext(null);
 
@@ -18,16 +19,15 @@ export const AuthProvider = ({ children }) => {
         const accessToken = Cookies.get('access_token');
         if (accessToken) {
             try {
-                // Verify the token validity with the backend using a simple endpoint that requires auth
-                // If getUsers() is protected and accessible to authenticated users, it serves as a good check
-                // Otherwise, you might need a dedicated endpoint like /auth/users/me/ or /auth/jwt/verify/
-                // Based on your api.js, /auth/users/me/ is a good option.
-                const res = await getUsers(); // Or api.get('/auth/users/me/') if getUsers is not suitable
+                // Use the getMe endpoint to fetch current user details
+                const res = await getMe();
                 setUser(res.data);
                 setIsAuthenticated(true);
             } catch (error) {
                 console.error("Failed to load user or token invalid:", error.response?.data || error.message);
-                logout(); // Clear invalid tokens and state
+                // If fetching user details fails, it likely means the token is invalid or expired
+                // or the user doesn't have permission to access /me/. Log out.
+                logout();
             }
         }
         setLoading(false); // Set loading to false once auth check is complete
@@ -40,39 +40,45 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            // Use the imported apiLogin function
             const res = await apiLogin(username, password);
-
             // Tokens are already handled by api.js interceptors and stored in cookies there.
             // No need to manually set cookies here.
-
+            toast.success('Logged in successfully!'); // Add toast notification
             await loadUser(); // Fetch user details and update auth state
             navigate('/dashboard'); // Redirect to dashboard after successful login
             return true;
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
             setIsAuthenticated(false);
+            const errorMsg = error.response?.data?.detail || Object.values(error.response?.data || {})[0]?.toString() || 'Invalid credentials';
+            toast.error(`Login failed: ${errorMsg}`); // Add toast notification
             return false;
         }
     };
 
     const register = async (username, email, password) => {
         try {
-            // Use the imported apiRegister function
             const res = await apiRegister(username, email, password);
-            return res.data; // Return new user data if needed (e.g., for success message)
+            toast.success('Registration successful! Please log in.'); // Add toast notification
+            navigate('/login'); // Redirect to login page after successful registration
+            return res.data;
         } catch (error) {
             console.error("Registration failed in AuthContext:", error.response?.data || error.message);
-            throw error; // Re-throw to allow component to catch and display specific errors
+            const errorData = error.response?.data;
+            let errorMsg = 'Registration failed.';
+            if (errorData) {
+                errorMsg = Object.values(errorData).flat().join(', ');
+            }
+            toast.error(`Registration failed: ${errorMsg}`); // Add toast notification
+            throw error;
         }
     };
 
     const logout = () => {
-        // Use the imported apiLogout function, which clears cookies
-        apiLogout();
-        // Clear user state
+        apiLogout(); // Use the imported apiLogout function, which clears cookies
         setUser(null);
         setIsAuthenticated(false);
+        toast.info('You have been logged out.'); // Add toast notification
         navigate('/login'); // Redirect to login page on logout
     };
 
