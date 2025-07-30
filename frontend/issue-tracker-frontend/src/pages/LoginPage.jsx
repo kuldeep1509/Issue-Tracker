@@ -47,7 +47,7 @@ const LoginPage = () => {
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(to right, #667eea, #764ba2)',
+                background: 'linear-gradient(to right, #1f4037, #99f2c8)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -57,21 +57,23 @@ const LoginPage = () => {
             <Container maxWidth="xs">
                 <Box
                     sx={{
-                        backdropFilter: 'blur(10px)',
-                        backgroundColor: 'rgba(255,255,255,0.85)',
+                        backdropFilter: 'blur(12px)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: 4,
-                        boxShadow: 5,
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
                         p: 4,
+                        color: '#fff',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
+                    <Avatar sx={{ m: 1, bgcolor: '#0f9d58' }}>
                         <LockOutlinedIcon />
                     </Avatar>
-                    <Typography component="h1" variant="h5" mb={2}>
-                        Welcome Back
+                    <Typography component="h1" variant="h5" mb={2} sx={{ fontWeight: 500 }}>
+                        Welcome Back 👋
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}
@@ -83,6 +85,9 @@ const LoginPage = () => {
                             id="username"
                             name="username"
                             label="Username"
+                            variant="filled"
+                            InputProps={{ style: { color: '#fff' } }}
+                            InputLabelProps={{ style: { color: '#ccc' } }}
                             value={formik.values.username}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -97,6 +102,9 @@ const LoginPage = () => {
                             name="password"
                             label="Password"
                             type="password"
+                            variant="filled"
+                            InputProps={{ style: { color: '#fff' } }}
+                            InputLabelProps={{ style: { color: '#ccc' } }}
                             value={formik.values.password}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -111,17 +119,29 @@ const LoginPage = () => {
                             sx={{
                                 mt: 3,
                                 mb: 2,
-                                transition: 'transform 0.2s ease-in-out',
-                                '&:hover': { transform: 'scale(1.02)' },
+                                backgroundColor: '#0f9d58',
+                                '&:hover': {
+                                    backgroundColor: '#0b7e45',
+                                    transform: 'scale(1.03)',
+                                },
+                                transition: '0.2s',
+                                fontWeight: 600,
                             }}
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                         </Button>
 
-                        <Typography variant="body2" align="center">
+                        <Typography variant="body2" align="center" sx={{ color: '#eee' }}>
                             Don't have an account?{' '}
-                            <Link to="/register" style={{ textDecoration: 'none', color: '#1976d2' }}>
+                            <Link
+                                to="/register"
+                                style={{
+                                    textDecoration: 'underline',
+                                    color: '#80cbc4',
+                                    fontWeight: 500,
+                                }}
+                            >
                                 Sign Up
                             </Link>
                         </Typography>
