@@ -16,74 +16,95 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system';
 
-// --- Styled Components for Simple & Attractive Styling ---
+// --- Aqua Color Palette Definition ---
+const aquaColors = {
+    primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
+    primaryLight: '#4dd0e1', // Lighter primary
+    primaryDark: '#00838f', // Darker primary for hover
+    backgroundLight: '#e0f7fa', // Very light aqua background (Material Cyan 50)
+    backgroundMedium: '#b2ebf2', // Medium aqua for subtle accents
+    textDark: '#263238', // Dark slate for primary text
+    textMuted: '#546e7a', // Muted slate for secondary text
+    borderLight: '#b2ebf2', // Light aqua border
+    borderMuted: '#80deea', // Slightly darker aqua border
+    errorRed: '#ef5350', // Standard Material-UI error red
+};
 
-const SimpleBackgroundBox = styled(Box)({
+// --- Styled Components with Aqua Palette & Enhanced Spacing ---
+
+const AquaBackgroundBox = styled(Box)({
     minHeight: '100vh',
-    background: '#f8f9fa', // Very light grey background
+    background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)', // Soft aqua gradient background
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    p: 2,
+    padding: 2, // General padding around the container
 });
 
-const SimpleFormContainer = styled(Box)(({ theme }) => ({
-    backgroundColor: '#ffffff', // Clean white background for the form
-    borderRadius: '8px', // Slightly rounded corners
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Very soft, subtle shadow
-    p: 4, // Ample padding inside the form
+const AquaFormContainer = styled(Box)(({ theme }) => ({
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)', // A bit more pronounced shadow for depth
+    padding: theme.spacing(6), // **KEY CHANGE: Significantly increased internal padding**
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     width: '100%',
-    maxWidth: '380px', // Standard width for a login form
-    border: '1px solid #e9ecef', // Very light border
+    maxWidth: '450px', // **Slightly increased max-width for more visual space**
+    border: `1px solid ${aquaColors.backgroundMedium}`,
 }));
 
-const SimpleTextField = styled(TextField)(({ theme }) => ({
-    // Ensure consistent vertical spacing between text fields
-    marginBottom: theme.spacing(2.5), // Increased spacing for better separation
+const AquaTextField = styled(TextField)(({ theme }) => ({
+    // Consistent vertical margin between text fields and other elements
+    marginBottom: theme.spacing(3),
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '6px', // Slightly less rounded than before for a crisp look
+        borderRadius: '8px',
         '& fieldset': {
-            borderColor: '#ced4da', // Light grey border
+            borderColor: aquaColors.borderLight,
         },
         '&:hover fieldset': {
-            borderColor: '#adb5bd', // Slightly darker grey on hover
+            borderColor: aquaColors.borderMuted,
         },
         '&.Mui-focused fieldset': {
-            borderColor: '#007bff', // Primary blue on focus
-            borderWidth: '2px', // Thicker border on focus for clear feedback
+            borderColor: aquaColors.primary,
+            borderWidth: '2px',
         },
     },
     '& .MuiInputBase-input': {
-        padding: '12px 14px', // Standard padding
-        color: '#343a40', // Darker text for readability
+        padding: '16px 18px', // **Increased internal padding for input text**
+        color: aquaColors.textDark,
     },
     '& .MuiInputLabel-root': {
-        color: '#6c757d', // Muted grey for labels
+        color: aquaColors.textMuted,
         '&.Mui-focused': {
-            color: '#007bff', // Primary blue for focused label
+            color: aquaColors.primary,
         },
+    },
+    '& .MuiFormHelperText-root': {
+        color: aquaColors.errorRed,
+        marginTop: theme.spacing(0.5),
+        marginBottom: 0,
     }
 }));
 
-const SimpleButton = styled(Button)(({ theme }) => ({
-    backgroundColor: '#007bff', // Primary blue button
+const AquaButton = styled(Button)(({ theme }) => ({
+    backgroundColor: aquaColors.primary,
     color: 'white',
-    borderRadius: '6px', // Matches input field rounding
-    height: 48, // Consistent height
-    fontWeight: 600, // Slightly bolder text
-    letterSpacing: '0.5px',
-    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out',
+    borderRadius: '8px',
+    height: 56, // **Taller button for more presence**
+    fontWeight: 700, // Bolder text for the action button
+    fontSize: '1.05rem', // Slightly larger font
+    letterSpacing: '0.7px',
+    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
     '&:hover': {
-        backgroundColor: '#0056b3', // Darker blue on hover
-        transform: 'translateY(-1px)', // Slight lift effect
+        backgroundColor: aquaColors.primaryDark,
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)', // Subtle shadow on hover
     },
     '&:disabled': {
-        backgroundColor: '#e9ecef',
-        color: '#adb5bd',
+        backgroundColor: aquaColors.backgroundMedium,
+        color: '#ffffff',
         boxShadow: 'none',
         transform: 'none',
     },
@@ -106,7 +127,6 @@ const LoginPage = () => {
             setLoading(true);
             setError('');
             try {
-                // Simulate API call - Replace with your actual login logic
                 const success = await login(values.username, values.password);
                 if (!success) {
                     setError('Invalid username or password. Please try again.');
@@ -121,20 +141,25 @@ const LoginPage = () => {
     });
 
     return (
-        <SimpleBackgroundBox>
+        <AquaBackgroundBox>
             <Container maxWidth="xs">
-                <SimpleFormContainer>
-                    <Avatar sx={{ m: 1, bgcolor: '#007bff', width: 56, height: 56 }}> {/* Primary blue avatar */}
-                        <LockOutlinedIcon fontSize="large" />
+                <AquaFormContainer>
+                    <Avatar sx={{ m: 1, bgcolor: aquaColors.primary, width: 64, height: 64 }}> {/* Even larger avatar */}
+                        <LockOutlinedIcon sx={{ fontSize: 36 }} /> {/* Larger icon within avatar */}
                     </Avatar>
-                    <Typography component="h1" variant="h5" mb={3} sx={{ fontWeight: 700, color: '#343a40' }}>
-                        Welcome!
+                    <Typography
+                        component="h1"
+                        variant="h4"
+                        mb={4} // Consistent margin below heading
+                        sx={{ fontWeight: 700, color: aquaColors.textDark, textAlign: 'center' }}
+                    >
+                        Welcome Back!
                     </Typography>
 
-                    {error && <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: '6px' }}>{error}</Alert>}
+                    {error && <Alert severity="error" sx={{ mb: 3, width: '100%', borderRadius: '6px' }}>{error}</Alert>}
 
                     <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
-                        <SimpleTextField
+                        <AquaTextField
                             fullWidth
                             id="username"
                             name="username"
@@ -147,7 +172,7 @@ const LoginPage = () => {
                             helperText={formik.touched.username && formik.errors.username}
                         />
 
-                        <SimpleTextField
+                        <AquaTextField
                             fullWidth
                             id="password"
                             name="password"
@@ -161,36 +186,36 @@ const LoginPage = () => {
                             helperText={formik.touched.password && formik.errors.password}
                         />
 
-                        <SimpleButton
+                        <AquaButton
                             type="submit"
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 1.5, mb: 2.5 }} {/* Adjusted spacing relative to SimpleTextField's marginBottom */}
+                            sx={{ mt: 2, mb: 3 }} // Adjusted margins for button
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Log In'}
-                        </SimpleButton>
+                        </AquaButton>
 
-                        <Typography variant="body2" align="center" sx={{ color: '#6c757d' }}>
+                        <Typography variant="body2" align="center" sx={{ color: aquaColors.textMuted, mt: 2 }}>
                             Don’t have an account?{' '}
                             <Link
                                 to="/register"
                                 style={{
                                     textDecoration: 'none',
-                                    color: '#007bff', // Primary blue for link
+                                    color: aquaColors.primary,
                                     fontWeight: 600,
                                     transition: 'color 0.2s ease-in-out',
                                 }}
-                                onMouseOver={(e) => e.target.style.color = '#0056b3'}
-                                onMouseOut={(e) => e.target.style.color = '#007bff'}
+                                onMouseOver={(e) => e.target.style.color = aquaColors.primaryDark}
+                                onMouseOut={(e) => e.target.style.color = aquaColors.primary}
                             >
                                 Sign Up
                             </Link>
                         </Typography>
                     </Box>
-                </SimpleFormContainer>
+                </AquaFormContainer>
             </Container>
-        </SimpleBackgroundBox>
+        </AquaBackgroundBox>
     );
 };
 
