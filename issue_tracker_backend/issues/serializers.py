@@ -1,19 +1,39 @@
-# issues/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserSerializer as DjoserUserSerializer
-from .models import Issue, Team # Import Team model
+# Import Djoser's base serializers for extension
+from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
+from .models import Issue, Team
 
 User = get_user_model()
 
-class SimpleUserSerializer(DjoserUserSerializer):
-    '''
-    Used inside the IssueSerializer to show user details of owner and assigned_to.
-    Shows only id, username, and email.
-    '''
+# This serializer is used by Djoser for the /auth/users/me/ endpoint
+# and for /auth/users/ endpoints, as configured in settings.py.
+# It aligns with 'issues.serializers.CustomCurrentUserSerializer' from your DJOSER settings.
+class CustomCurrentUserSerializer(DjoserUserSerializer):
     class Meta(DjoserUserSerializer.Meta):
         model = User
-        fields = ('id', 'username', 'email') # Expose basic user info
+        # Expose all fields you want for the current user's profile.
+        # Ensure 'id', 'username', 'email' exist on your User model.
+        fields = ('id', 'username', 'email')
+        # If your custom user model has other fields like 'first_name', 'last_name',
+        # and you want to expose them via /me/, add them here.
+        # Example: fields = ('id', 'username', 'email', 'first_name', 'last_name')
+
+
+# This serializer is used for nested representations (e.g., inside Issue or Team serializers)
+# where you only need basic user info.
+class SimpleUserSerializer(DjoserUserSerializer):
+    class Meta(DjoserUserSerializer.Meta):
+        model = User
+        fields = ('id', 'username', 'email')
+
+# If you use a custom user creation serializer with Djoser, configure it in settings.py
+# and it should look something like this.
+class CustomUserCreateSerializer(DjoserUserCreateSerializer):
+    class Meta(DjoserUserCreateSerializer.Meta):
+        model = User
+        fields = ('id', 'username', 'email', 'password') # Basic fields for user creation
+
 
 class TeamSerializer(serializers.ModelSerializer):
     """
@@ -21,8 +41,6 @@ class TeamSerializer(serializers.ModelSerializer):
     Includes owner and members for display.
     """
     owner = SimpleUserSerializer(read_only=True) # Display owner details
-    # For members, we'll use PrimaryKeyRelatedField for writing (input)
-    # and SimpleUserSerializer for reading (output)
     members = SimpleUserSerializer(many=True, read_only=True)
     member_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
@@ -38,7 +56,6 @@ class TeamSerializer(serializers.ModelSerializer):
         read_only_fields = ['owner', 'created_at', 'updated_at'] # Owner is set automatically
 
     def create(self, validated_data):
-        # Handle members separately if 'member_ids' is in validated_data
         member_ids = validated_data.pop('members', []) # Pop 'members' (from source='members')
         team = Team.objects.create(**validated_data)
         team.members.set(member_ids) # Set members after team creation

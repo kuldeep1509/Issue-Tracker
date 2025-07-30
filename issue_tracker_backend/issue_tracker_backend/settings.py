@@ -362,6 +362,10 @@ DJOSER = {
     },
     'SERIALIZERS': {
         'current_user': 'issues.serializers.CustomCurrentUserSerializer',
+        # It's also good practice to explicitly set 'user' and 'user_me' if 'current_user' is set for /me/
+        # They often default to the same, but explicit is better for clarity and avoiding issues.
+        'user': 'issues.serializers.CustomCurrentUserSerializer', # For general /users/
+        'user_me': 'issues.serializers.CustomCurrentUserSerializer', # Often used interchangeably with current_user
     },
 }
 
