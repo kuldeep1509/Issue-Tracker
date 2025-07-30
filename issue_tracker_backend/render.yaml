@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: issue-tracker-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn issue_tracker_backend.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: issue_tracker_backend.settings
+      - key: SECRET_KEY
+        value: django-insecure-s3qna+j6&!r%hog+96-!)fahtebtb093s502u%a%6i!5_s&#i8
+      - key: DEBUG
+        value: false
