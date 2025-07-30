@@ -2,21 +2,26 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
+// Assuming you have a Layout component that contains the AppBar/Toolbar
+// If not, you might need to integrate the AppBar directly into Dashboard or create a simple layout.
+import Layout from './components/Layout'; // This was in your previous App.js
+import ProtectedRoute from './components/ProtectedRoute'; // Your protected route component
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import { CssBaseline } from '@mui/material'; // Material-UI's CSS reset
-
+import { ToastContainer } from 'react-toastify'; // Import ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 function App() {
     return (
         <Router>
-            
-            <CssBaseline /> 
-            <AuthProvider> {/* Provides authentication context to all child components */}
-                <Layout> {/* Global layout component for consistent header */}
+            <CssBaseline /> {/* Material-UI's CSS reset */}
+            <AuthProvider>
+                {/* Provides authentication context to all child components */}
+                {/* Layout component for consistent header/footer/etc. */}
+                {/* If you don't have a specific Layout component, you might wrap Routes directly */}
+                <Layout>
                     <Routes>
                         {/* Public Routes */}
                         <Route path="/login" element={<LoginPage />} />
@@ -36,7 +41,8 @@ function App() {
                     </Routes>
                 </Layout>
             </AuthProvider>
-        
+            {/* ToastContainer for displaying notifications */}
+            <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         </Router>
     );
 }
