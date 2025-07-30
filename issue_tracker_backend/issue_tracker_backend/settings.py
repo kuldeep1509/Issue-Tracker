@@ -250,7 +250,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 # Allowed hosts
 ALLOWED_HOSTS = [
     ".vercel.app",
-    "issue-tracker-s3ys.onrender.com",
+    "https://issue-tracker-q9v4.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
