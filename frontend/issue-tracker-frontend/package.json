@@ -25,6 +25,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
+    "react-toastify": "^11.0.5",
     "yup": "^1.6.1"
   },
   "devDependencies": {
