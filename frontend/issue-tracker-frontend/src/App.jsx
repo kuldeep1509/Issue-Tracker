@@ -8,13 +8,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import { CssBaseline } from '@mui/material'; // Material-UI's CSS reset
-import theme from './theme/theme';
-import ThemeProvider from '@mui/material';
+
 
 function App() {
     return (
         <Router>
-            <ThemeProvider theme={theme}>
+            
             <CssBaseline /> 
             <AuthProvider> {/* Provides authentication context to all child components */}
                 <Layout> {/* Global layout component for consistent header */}
@@ -37,7 +36,7 @@ function App() {
                     </Routes>
                 </Layout>
             </AuthProvider>
-            </ThemeProvider>
+        
         </Router>
     );
 }
