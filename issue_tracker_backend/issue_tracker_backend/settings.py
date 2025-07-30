@@ -244,7 +244,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secret key & debug
-SECRET_KEY = config('SECRET_KEY', default='your-unsafe-dev-key')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)fahtebtb093s502u%a%6i!5_s&#i8')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Allowed hosts
