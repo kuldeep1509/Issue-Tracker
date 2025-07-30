@@ -167,7 +167,7 @@ const LoginPage = () => {
                             type="submit"
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 2, mb: 2 }} {/* Reduced margin-top for button as input has margin-bottom */}
+                            sx={{ mt: 2, mb: 2 }}
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
