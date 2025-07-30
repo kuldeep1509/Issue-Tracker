@@ -3,18 +3,142 @@ import React, { useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Typography, Alert, CircularProgress,
-    Box, // Ensure Box is imported for the form structure
+    Box, Avatar,
 } from '@mui/material';
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'; // Icon for inviting a person
 import api from '../services/api';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { styled } from '@mui/system';
+
+// --- Aqua Color Palette Definition (Consistent with other components) ---
+const aquaColors = {
+    primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
+    primaryLight: '#4dd0e1', // Lighter primary
+    primaryDark: '#00838f', // Darker primary for hover
+    backgroundLight: '#e0f7fa', // Very light aqua background (Material Cyan 50)
+    backgroundMedium: '#b2ebf2', // Medium aqua for subtle accents
+    textDark: '#263238', // Dark slate for primary text
+    textMuted: '#546e7a', // Muted slate for secondary text
+    borderLight: '#b2ebf2', // Light aqua border
+    borderMuted: '#80deea', // Slightly darker aqua border
+    errorRed: '#ef5350', // Standard Material-UI error red
+    cancelButton: '#6c757d', // Muted grey for cancel button
+    cancelButtonHover: '#495057', // Darker grey for cancel hover
+};
+
+// --- Styled Components (Re-used and adapted for Dialog) ---
+
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialog-paper': {
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+        border: `1px solid ${aquaColors.backgroundMedium}`,
+        padding: theme.spacing(2), // Overall padding inside the dialog paper
+    },
+}));
+
+const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
+    textAlign: 'center',
+    paddingBottom: theme.spacing(1), // Less padding at bottom for title
+    color: aquaColors.textDark,
+    fontWeight: 700,
+    fontSize: '1.75rem', // Larger title for prominence
+}));
+
+const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
+    padding: theme.spacing(3), // Generous padding for content
+    paddingTop: theme.spacing(1), // Adjust top padding to bring content closer to title
+}));
+
+const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
+    padding: theme.spacing(2),
+    paddingTop: theme.spacing(1), // Adjust top padding to bring buttons closer
+    justifyContent: 'center', // Center the action buttons
+    borderTop: `1px solid ${aquaColors.backgroundLight}`, // Subtle separator
+    marginTop: theme.spacing(2), // Space above the actions
+}));
+
+const AquaTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(3), // Consistent vertical margin
+
+    '& .MuiOutlinedInput-root': {
+        borderRadius: '8px',
+        '& fieldset': {
+            borderColor: aquaColors.borderLight,
+        },
+        '&:hover fieldset': {
+            borderColor: aquaColors.borderMuted,
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: aquaColors.primary,
+            borderWidth: '2px',
+        },
+    },
+    '& .MuiInputBase-input': {
+        padding: '16px 18px', // Consistent internal padding
+        color: aquaColors.textDark,
+    },
+    '& .MuiInputLabel-root': {
+        color: aquaColors.textMuted,
+        '&.Mui-focused': {
+            color: aquaColors.primary,
+        },
+    },
+    '& .MuiFormHelperText-root': {
+        color: aquaColors.errorRed,
+        marginTop: theme.spacing(0.5),
+        marginBottom: 0,
+    }
+}));
+
+const AquaButton = styled(Button)(({ theme }) => ({
+    backgroundColor: aquaColors.primary,
+    color: 'white',
+    borderRadius: '8px',
+    height: 56,
+    fontWeight: 700,
+    fontSize: '1.05rem',
+    letterSpacing: '0.7px',
+    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
+    '&:hover': {
+        backgroundColor: aquaColors.primaryDark,
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)',
+    },
+    '&:disabled': {
+        backgroundColor: aquaColors.backgroundMedium,
+        color: '#ffffff',
+        boxShadow: 'none',
+        transform: 'none',
+    },
+}));
+
+const CancelButton = styled(Button)(({ theme }) => ({
+    color: aquaColors.cancelButton,
+    borderRadius: '8px',
+    height: 56,
+    fontWeight: 600,
+    fontSize: '1.05rem',
+    letterSpacing: '0.7px',
+    transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
+    '&:hover': {
+        backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
+        color: aquaColors.cancelButtonHover,
+    },
+    '&:disabled': {
+        color: aquaColors.textMuted,
+        opacity: 0.6,
+    },
+}));
+
 
 const InviteTeamMemberModal = ({ open, handleClose }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [severity, setSeverity] = useState('info');
 
-    // Define the Yup validation schema for inviting a team member
     const validationSchema = yup.object({
         username: yup
             .string()
@@ -37,7 +161,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
             .required('Confirm Password is required'),
     });
 
-    // Initialize Formik
     const formik = useFormik({
         initialValues: {
             username: '',
@@ -52,16 +175,15 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
             setSeverity('info');
 
             try {
-                // Ensure your Djoser /auth/users/ endpoint expects `re_password`
                 await api.post('/auth/users/', {
                     username: values.username,
                     email: values.email,
                     password: values.password,
-                    re_password: values.re_password, // Include re_password for Djoser
+                    re_password: values.re_password,
                 });
                 setMessage('Team member invited (account created successfully)! They can now login.');
                 setSeverity('success');
-                resetForm(); // Clear form fields on successful submission
+                resetForm();
             } catch (error) {
                 console.error("Error inviting user:", error.response?.data || error);
 
@@ -94,112 +216,95 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
         },
     });
 
-    // Custom handleClose to reset form when modal is closed (e.g., by clicking outside)
     const handleCloseModal = () => {
-        formik.resetForm(); // Reset Formik state, including touched and errors
-        setMessage(''); // Clear any success/error messages
-        setSeverity('info'); // Reset severity
-        handleClose(); // Call the parent's handleClose prop
+        formik.resetForm();
+        setMessage('');
+        setSeverity('info');
+        handleClose();
     };
 
     return (
-        <Dialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
-            <DialogTitle>Invite New Team Member</DialogTitle>
-            <DialogContent>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
+            <StyledDialogTitle>
+                <Avatar sx={{ m: 'auto', mb: 2, bgcolor: aquaColors.primary, width: 64, height: 64 }}>
+                    <PersonAddAlt1Icon sx={{ fontSize: 36 }} />
+                </Avatar>
+                Invite New Team Member
+            </StyledDialogTitle>
+            <StyledDialogContent>
+                <Typography variant="body2" color={aquaColors.textMuted} sx={{ mb: 3, textAlign: 'center' }}>
                     This will create a new user account. Share the credentials securely with the invited team member.
                 </Typography>
-                {message && <Alert severity={severity} sx={{ mb: 2 }}>{message}</Alert>}
+                {message && <Alert severity={severity} sx={{ mb: 3, borderRadius: '6px' }}>{message}</Alert>}
 
-                {/* The form itself */}
-                <Box component="form" onSubmit={formik.handleSubmit} noValidate> {/* Hook up Formik's onSubmit here */}
-                    {/* Username Field */}
-                    <TextField
+                <Box component="form" onSubmit={formik.handleSubmit} noValidate>
+                    <AquaTextField
                         autoFocus
-                        margin="dense"
                         label="Username"
                         type="text"
                         fullWidth
                         variant="outlined"
-                        name="username" // Crucial: name must match Formik's initialValues key
+                        name="username"
                         value={formik.values.username}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur} // Important for validation on blur
+                        onBlur={formik.handleBlur}
                         error={formik.touched.username && Boolean(formik.errors.username)}
                         helperText={formik.touched.username && formik.errors.username}
-                        required
-                        sx={{ mb: 1 }} // Add some bottom margin for spacing
                     />
 
-                    {/* Email Field */}
-                    <TextField
-                        margin="dense"
+                    <AquaTextField
                         label="Email"
                         type="email"
                         fullWidth
                         variant="outlined"
-                        name="email" // Crucial: name must match Formik's initialValues key
+                        name="email"
                         value={formik.values.email}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={formik.touched.email && Boolean(formik.errors.email)}
                         helperText={formik.touched.email && formik.errors.email}
-                        required
-                        sx={{ mb: 1 }}
                     />
 
-                    {/* Password Field */}
-                    <TextField
-                        margin="dense"
+                    <AquaTextField
                         label="Password"
                         type="password"
                         fullWidth
                         variant="outlined"
-                        name="password" // Crucial: name must match Formik's initialValues key
+                        name="password"
                         value={formik.values.password}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={formik.touched.password && Boolean(formik.errors.password)}
                         helperText={formik.touched.password && formik.errors.password}
-                        required
-                        sx={{ mb: 1 }}
                     />
 
-                    {/* Confirm Password Field (This was missing from your original code but is vital for Djoser) */}
-                    <TextField
-                        margin="dense"
+                    <AquaTextField
                         label="Confirm Password"
                         type="password"
                         fullWidth
                         variant="outlined"
-                        name="re_password" // Crucial: name must match Formik's initialValues key and Yup schema
+                        name="re_password"
                         value={formik.values.re_password}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={formik.touched.re_password && Boolean(formik.errors.re_password)}
                         helperText={formik.touched.re_password && formik.errors.re_password}
-                        required
-                        sx={{ mb: 2 }} // Extra margin before the buttons
                     />
-
-                    {/* Submit button is now outside the form Box to align with DialogActions */}
                 </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleCloseModal} color="secondary" disabled={loading}>
+            </StyledDialogContent>
+            <StyledDialogActions>
+                <CancelButton onClick={handleCloseModal} disabled={loading}>
                     Cancel
-                </Button>
-                {/* Use type="submit" for the button within the form or call formik.handleSubmit directly on onClick */}
-                <Button
-                    onClick={formik.handleSubmit} // This will trigger Formik's validation and then onSubmit
+                </CancelButton>
+                <AquaButton
+                    onClick={formik.handleSubmit}
                     variant="contained"
-                    // Disable if loading, client-side validation fails, or no input has been touched/changed
                     disabled={loading || !formik.isValid || !formik.dirty}
                 >
-                    {loading ? <CircularProgress size={24} /> : 'Create Account'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+                </AquaButton>
+            </StyledDialogActions>
+        </StyledDialog>
     );
 };
 
