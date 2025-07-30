@@ -17,7 +17,7 @@ import IssueCard from '../components/IssueCard';
 import IssueModal from '../components/IssueModal';
 import TeamCreationModal from '../components/TeamCreationModal';
 import InviteTeamMemberModal from '../components/InviteTeamMemberModal'; // For inviting new users
-import { toast } from 'react-toastify';
+import toast from 'react-toastify'
 import {
     getIssues, deleteIssue, updateIssue,
     getTeams, addTeamMember, removeTeamMember, deleteTeam
