@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { styled } from '@mui/system';// Import styled
+import { styled } from '@mui/system'; // Import styled
 
 // --- Aqua Color Palette Definition (Consistent with LoginPage & Layout) ---
 const aquaColors = {
@@ -146,7 +146,6 @@ const RegisterPage = () => {
             setError('');
             setSuccess('');
             try {
-                // AuthContext's register function now handles toast notifications internally
                 await register(values.username, values.email, values.password);
                 setSuccess('Registration successful! You can now login.');
                 setTimeout(() => {
@@ -206,8 +205,8 @@ const RegisterPage = () => {
                         <AquaTextField
                             fullWidth
                             id="username"
-                            name="username"
                             label="Username"
+                            name="username"
                             autoComplete="username"
                             autoFocus
                             value={formik.values.username}

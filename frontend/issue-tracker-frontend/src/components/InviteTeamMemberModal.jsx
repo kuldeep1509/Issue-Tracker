@@ -6,14 +6,13 @@ import {
     Box, Avatar,
 } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'; // Icon for inviting a person
-import { register as apiRegister } from '../services/api'; // Use the specific register function
+import api from '../services/api';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system';
 
 // --- Aqua Color Palette Definition (Consistent with other components) ---
-const aquaColors =
-{
+const aquaColors = {
     primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
     primaryLight: '#4dd0e1', // Lighter primary
     primaryDark: '#00838f', // Darker primary for hover
@@ -26,15 +25,12 @@ const aquaColors =
     errorRed: '#ef5350', // Standard Material-UI error red
     cancelButton: '#6c757d', // Muted grey for cancel button
     cancelButtonHover: '#495057', // Darker grey for cancel hover
-    white: '#ffffff', // Explicit white for styled components
 };
 
 // --- Styled Components (Re-used and adapted for Dialog) ---
 
-const StyledDialog = styled(Dialog)(({ theme }) =>
-({
-    '& .MuiDialog-paper':
-    {
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+    '& .MuiDialog-paper': {
         backgroundColor: '#ffffff',
         borderRadius: '12px',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
@@ -43,8 +39,7 @@ const StyledDialog = styled(Dialog)(({ theme }) =>
     },
 }));
 
-const StyledDialogTitle = styled(DialogTitle)(({ theme }) =>
-({
+const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
     textAlign: 'center',
     paddingBottom: theme.spacing(1), // Less padding at bottom for title
     color: aquaColors.textDark,
@@ -52,14 +47,12 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) =>
     fontSize: '1.75rem', // Larger title for prominence
 }));
 
-const StyledDialogContent = styled(DialogContent)(({ theme }) =>
-({
+const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
     padding: theme.spacing(3), // Generous padding for content
     paddingTop: theme.spacing(1), // Adjust top padding to bring content closer to title
 }));
 
-const StyledDialogActions = styled(DialogActions)(({ theme }) =>
-({
+const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
     padding: theme.spacing(2),
     paddingTop: theme.spacing(1), // Adjust top padding to bring buttons closer
     justifyContent: 'center', // Center the action buttons
@@ -67,42 +60,33 @@ const StyledDialogActions = styled(DialogActions)(({ theme }) =>
     marginTop: theme.spacing(2), // Space above the actions
 }));
 
-const AquaTextField = styled(TextField)(({ theme }) =>
-({
+const AquaTextField = styled(TextField)(({ theme }) => ({
     marginBottom: theme.spacing(3), // Consistent vertical margin
 
-    '& .MuiOutlinedInput-root':
-    {
+    '& .MuiOutlinedInput-root': {
         borderRadius: '8px',
-        '& fieldset':
-        {
+        '& fieldset': {
             borderColor: aquaColors.borderLight,
         },
-        '&:hover fieldset':
-        {
+        '&:hover fieldset': {
             borderColor: aquaColors.borderMuted,
         },
-        '&.Mui-focused fieldset':
-        {
+        '&.Mui-focused fieldset': {
             borderColor: aquaColors.primary,
             borderWidth: '2px',
         },
     },
-    '& .MuiInputBase-input':
-    {
+    '& .MuiInputBase-input': {
         padding: '16px 18px', // Consistent internal padding
         color: aquaColors.textDark,
     },
-    '& .MuiInputLabel-root':
-    {
+    '& .MuiInputLabel-root': {
         color: aquaColors.textMuted,
-        '&.Mui-focused':
-        {
+        '&.Mui-focused': {
             color: aquaColors.primary,
         },
     },
-    '& .MuiFormHelperText-root':
-    {
+    '& .MuiFormHelperText-root': {
         color: aquaColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
@@ -118,14 +102,12 @@ const AquaButton = styled(Button)(({ theme }) => ({
     fontSize: '1.05rem',
     letterSpacing: '0.7px',
     transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
-    '&:hover':
-    {
+    '&:hover': {
         backgroundColor: aquaColors.primaryDark,
         transform: 'translateY(-2px)',
         boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)',
     },
-    '&:disabled':
-    {
+    '&:disabled': {
         backgroundColor: aquaColors.backgroundMedium,
         color: '#ffffff',
         boxShadow: 'none',
@@ -141,13 +123,11 @@ const CancelButton = styled(Button)(({ theme }) => ({
     fontSize: '1.05rem',
     letterSpacing: '0.7px',
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
-    '&:hover':
-    {
+    '&:hover': {
         backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
         color: aquaColors.cancelButtonHover,
     },
-    '&:disabled':
-    {
+    '&:disabled': {
         color: aquaColors.textMuted,
         opacity: 0.6,
     },
@@ -159,7 +139,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
     const [message, setMessage] = useState('');
     const [severity, setSeverity] = useState('info');
 
-    // Validation schema for inviting a new user (account creation)
     const validationSchema = yup.object({
         username: yup
             .string()
@@ -176,7 +155,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
             .string()
             .min(8, 'Password must be at least 8 characters')
             .required('Password is required'),
-        re_password: yup // Djoser expects 're_password' if REST_AUTH_REGISTER_SERIALIZERS is custom
+        re_password: yup
             .string()
             .oneOf([yup.ref('password'), null], 'Passwords must match')
             .required('Confirm Password is required'),
@@ -187,7 +166,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
             username: '',
             email: '',
             password: '',
-            re_password: '', // This field is for client-side validation and sent if your Djoser config needs it
+            re_password: '',
         },
         validationSchema: validationSchema,
         onSubmit: async (values, { resetForm }) => {
@@ -196,12 +175,12 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
             setSeverity('info');
 
             try {
-                // Call the register function from services/api.js
-                // apiRegister handles the API call to /auth/users/
-                // Djoser's /auth/users/ endpoint typically expects username, email, password
-                // re_password is usually for client-side validation unless your custom serializer expects it.
-                await apiRegister(values.username, values.email, values.password);
-
+                await api.post('/auth/users/', {
+                    username: values.username,
+                    email: values.email,
+                    password: values.password,
+                    re_password: values.re_password,
+                });
                 setMessage('Team member invited (account created successfully)! They can now login.');
                 setSeverity('success');
                 resetForm();
@@ -217,19 +196,17 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                             const errorValue = serverErrors[key];
                             if (Array.isArray(errorValue)) {
                                 return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${errorValue.join(', ')}`;
-                            } else if (typeof errorValue === 'string') {
+                            } else {
                                 return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${errorValue}`;
                             }
-                            return '';
                         })
-                        .filter(msg => msg !== '') // Filter out empty messages
                         .join('; ');
                     errorMessage = `Failed to invite team member: ${errorMessages}`;
                 } else if (typeof serverErrors === 'string') {
                     errorMessage = 'An unexpected server error occurred. Check backend console.';
                     console.error("Backend returned HTML error:", serverErrors);
-                } else if (error.message) {
-                    errorMessage = `Network error: ${error.message}`;
+                } else {
+                    errorMessage = error.response?.data?.detail || error.message || errorMessage;
                 }
                 setMessage(errorMessage);
                 setSeverity('error');
@@ -273,7 +250,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         onBlur={formik.handleBlur}
                         error={formik.touched.username && Boolean(formik.errors.username)}
                         helperText={formik.touched.username && formik.errors.username}
-                        required
                     />
 
                     <AquaTextField
@@ -287,7 +263,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         onBlur={formik.handleBlur}
                         error={formik.touched.email && Boolean(formik.errors.email)}
                         helperText={formik.touched.email && formik.errors.email}
-                        required
                     />
 
                     <AquaTextField
@@ -301,7 +276,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         onBlur={formik.handleBlur}
                         error={formik.touched.password && Boolean(formik.errors.password)}
                         helperText={formik.touched.password && formik.errors.password}
-                        required
                     />
 
                     <AquaTextField
@@ -315,7 +289,6 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         onBlur={formik.handleBlur}
                         error={formik.touched.re_password && Boolean(formik.errors.re_password)}
                         helperText={formik.touched.re_password && formik.errors.re_password}
-                        required
                     />
                 </Box>
             </StyledDialogContent>
