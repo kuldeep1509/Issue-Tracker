@@ -47,7 +47,7 @@ const LoginPage = () => {
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(to right, #1f4037, #99f2c8)',
+                background: 'linear-gradient(to right, #2C3E50, #FD746C)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -58,10 +58,10 @@ const LoginPage = () => {
                 <Box
                     sx={{
                         backdropFilter: 'blur(12px)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: 4,
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
                         p: 4,
                         color: '#fff',
                         display: 'flex',
@@ -69,11 +69,11 @@ const LoginPage = () => {
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar sx={{ m: 1, bgcolor: '#0f9d58' }}>
+                    <Avatar sx={{ m: 1, bgcolor: '#FF6F61' }}>
                         <LockOutlinedIcon />
                     </Avatar>
-                    <Typography component="h1" variant="h5" mb={2} sx={{ fontWeight: 500 }}>
-                        Welcome Back 👋
+                    <Typography component="h1" variant="h5" mb={2} sx={{ fontWeight: 600 }}>
+                        Sign In to Your Account
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}
@@ -86,7 +86,12 @@ const LoginPage = () => {
                             name="username"
                             label="Username"
                             variant="filled"
-                            InputProps={{ style: { color: '#fff' } }}
+                            InputProps={{
+                                style: {
+                                    color: '#fff',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                },
+                            }}
                             InputLabelProps={{ style: { color: '#ccc' } }}
                             value={formik.values.username}
                             onChange={formik.handleChange}
@@ -103,7 +108,12 @@ const LoginPage = () => {
                             label="Password"
                             type="password"
                             variant="filled"
-                            InputProps={{ style: { color: '#fff' } }}
+                            InputProps={{
+                                style: {
+                                    color: '#fff',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                },
+                            }}
                             InputLabelProps={{ style: { color: '#ccc' } }}
                             value={formik.values.password}
                             onChange={formik.handleChange}
@@ -119,26 +129,27 @@ const LoginPage = () => {
                             sx={{
                                 mt: 3,
                                 mb: 2,
-                                backgroundColor: '#0f9d58',
+                                backgroundColor: '#FF6F61',
                                 '&:hover': {
-                                    backgroundColor: '#0b7e45',
-                                    transform: 'scale(1.03)',
+                                    backgroundColor: '#ff4d3c',
+                                    transform: 'scale(1.02)',
                                 },
                                 transition: '0.2s',
                                 fontWeight: 600,
+                                color: '#fff',
                             }}
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                         </Button>
 
-                        <Typography variant="body2" align="center" sx={{ color: '#eee' }}>
-                            Don't have an account?{' '}
+                        <Typography variant="body2" align="center" sx={{ color: '#FFD166' }}>
+                            Don&apos;t have an account?{' '}
                             <Link
                                 to="/register"
                                 style={{
                                     textDecoration: 'underline',
-                                    color: '#80cbc4',
+                                    color: '#FFD166',
                                     fontWeight: 500,
                                 }}
                             >
