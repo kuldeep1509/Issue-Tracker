@@ -47,7 +47,7 @@ const LoginPage = () => {
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(to right, #2C3E50, #FD746C)',
+                background: 'linear-gradient(to right, #141E30, #243B55)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -57,23 +57,20 @@ const LoginPage = () => {
             <Container maxWidth="xs">
                 <Box
                     sx={{
-                        backdropFilter: 'blur(12px)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: '#F4F6F8',
                         borderRadius: 4,
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
                         p: 4,
-                        color: '#fff',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar sx={{ m: 1, bgcolor: '#FF6F61' }}>
+                    <Avatar sx={{ m: 1, bgcolor: '#556cd6' }}>
                         <LockOutlinedIcon />
                     </Avatar>
-                    <Typography component="h1" variant="h5" mb={2} sx={{ fontWeight: 600 }}>
-                        Sign In to Your Account
+                    <Typography component="h1" variant="h5" mb={2} sx={{ fontWeight: 600, color: '#243B55' }}>
+                        Sign In
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}
@@ -85,14 +82,7 @@ const LoginPage = () => {
                             id="username"
                             name="username"
                             label="Username"
-                            variant="filled"
-                            InputProps={{
-                                style: {
-                                    color: '#fff',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                },
-                            }}
-                            InputLabelProps={{ style: { color: '#ccc' } }}
+                            variant="outlined"
                             value={formik.values.username}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -107,14 +97,7 @@ const LoginPage = () => {
                             name="password"
                             label="Password"
                             type="password"
-                            variant="filled"
-                            InputProps={{
-                                style: {
-                                    color: '#fff',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                },
-                            }}
-                            InputLabelProps={{ style: { color: '#ccc' } }}
+                            variant="outlined"
                             value={formik.values.password}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -129,9 +112,9 @@ const LoginPage = () => {
                             sx={{
                                 mt: 3,
                                 mb: 2,
-                                backgroundColor: '#FF6F61',
+                                backgroundColor: '#556cd6',
                                 '&:hover': {
-                                    backgroundColor: '#ff4d3c',
+                                    backgroundColor: '#334296',
                                     transform: 'scale(1.02)',
                                 },
                                 transition: '0.2s',
@@ -143,13 +126,13 @@ const LoginPage = () => {
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                         </Button>
 
-                        <Typography variant="body2" align="center" sx={{ color: '#FFD166' }}>
-                            Don&apos;t have an account?{' '}
+                        <Typography variant="body2" align="center" sx={{ color: '#555' }}>
+                            Don’t have an account?{' '}
                             <Link
                                 to="/register"
                                 style={{
                                     textDecoration: 'underline',
-                                    color: '#FFD166',
+                                    color: '#556cd6',
                                     fontWeight: 500,
                                 }}
                             >
