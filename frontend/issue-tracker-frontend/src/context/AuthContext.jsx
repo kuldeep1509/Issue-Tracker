@@ -1,8 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import Cookies from 'js-cookie';
-// Import the specific authentication functions from your new api.js
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getUsers } from '../services/api';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
@@ -18,11 +17,10 @@ export const AuthProvider = ({ children }) => {
         const accessToken = Cookies.get('access_token');
         if (accessToken) {
             try {
-                // Verify the token validity with the backend using a simple endpoint that requires auth
-                // If getUsers() is protected and accessible to authenticated users, it serves as a good check
-                // Otherwise, you might need a dedicated endpoint like /auth/users/me/ or /auth/jwt/verify/
-                // Based on your api.js, /auth/users/me/ is a good option.
-                const res = await getUsers(); // Or api.get('/auth/users/me/') if getUsers is not suitable
+                // Verify the token validity with the backend
+                await api.post('/auth/jwt/verify/', { token: accessToken });
+                // Fetch user details from the backend
+                const res = await api.get('/auth/users/me/');
                 setUser(res.data);
                 setIsAuthenticated(true);
             } catch (error) {
@@ -38,13 +36,15 @@ export const AuthProvider = ({ children }) => {
         loadUser();
     }, [loadUser]);
 
-    const login = async (username, password) => {
+    const login = async (username, password) => { // Expects username as per Django settings
         try {
-            // Use the imported apiLogin function
-            const res = await apiLogin(username, password);
+            // Call Djoser's JWT create endpoint
+            const res = await api.post('/auth/jwt/create/', { username, password });
+            const { access, refresh } = res.data;
 
-            // Tokens are already handled by api.js interceptors and stored in cookies there.
-            // No need to manually set cookies here.
+            // Store tokens in cookies
+            Cookies.set('access_token', access, { expires: 1/24, secure: process.env.NODE_ENV === 'production' }); // 1 hour expiry
+            Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
 
             await loadUser(); // Fetch user details and update auth state
             navigate('/dashboard'); // Redirect to dashboard after successful login
@@ -58,8 +58,8 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (username, email, password) => {
         try {
-            // Use the imported apiRegister function
-            const res = await apiRegister(username, email, password);
+            // Call Djoser's user registration endpoint
+            const res = await api.post('/auth/users/', { username, email, password });
             return res.data; // Return new user data if needed (e.g., for success message)
         } catch (error) {
             console.error("Registration failed in AuthContext:", error.response?.data || error.message);
@@ -68,8 +68,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        // Use the imported apiLogout function, which clears cookies
-        apiLogout();
+        // Clear tokens from cookies
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
         // Clear user state
         setUser(null);
         setIsAuthenticated(false);
