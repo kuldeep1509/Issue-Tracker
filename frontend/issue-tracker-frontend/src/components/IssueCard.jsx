@@ -3,17 +3,15 @@ import { Card, CardContent, Typography, Chip, IconButton, Box } from '@mui/mater
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDrag } from 'react-dnd';
-import { useAuth } from '../context/AuthContext'; // Corrected import path
-import { styled } from '@mui/system';// Import styled
+import { useAuth } from '../context/AuthContext';
+import { styled } from '@mui/system'; // Import styled
 
-const ItemTypes =
-{
+const ItemTypes = {
     ISSUE: 'issue'
 };
 
 // --- Aqua Color Palette Definition (Consistent with other components) ---
-const aquaColors =
-{
+const aquaColors = {
     primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
     primaryLight: '#4dd0e1', // Lighter primary
     primaryDark: '#00838f', // Darker primary for hover
@@ -25,7 +23,6 @@ const aquaColors =
     cardBorder: '#e0f7fa', // Very light aqua border for cards
     deleteRed: '#ef5350', // Standard Material-UI error red for delete
     editBlue: '#2196f3', // Standard Material-UI blue for edit (can be adjusted to aqua if desired)
-    white: '#ffffff', // Explicit white for styled components
 };
 
 // --- Styled Components for IssueCard ---
@@ -39,8 +36,7 @@ const StyledIssueCard = styled(Card)(({ isdragging }) => ({
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)', // Soft, subtle shadow
     border: `1px solid ${aquaColors.cardBorder}`, // Very light aqua border
     transition: 'transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out',
-    '&:hover':
-    {
+    '&:hover': {
         transform: 'translateY(-3px)', // Slight lift effect on hover
         boxShadow: '0 6px 18px rgba(0, 0, 0, 0.12)', // Slightly stronger shadow on hover
     }
@@ -48,8 +44,7 @@ const StyledIssueCard = styled(Card)(({ isdragging }) => ({
 
 const StyledCardContent = styled(CardContent)({
     padding: '16px', // Ample padding inside the card
-    '&:last-child':
-    { // Override Material-UI's default last-child padding for consistency
+    '&:last-child': { // Override Material-UI's default last-child padding for consistency
         paddingBottom: '16px',
     },
 });
@@ -85,23 +80,19 @@ const StyledChip = styled(Chip)(({ labelcolor }) => ({
     fontWeight: 600,
     fontSize: '0.75rem', // Slightly larger font for chips
     height: '24px', // Consistent chip height
-    '&.MuiChip-colorInfo':
-    {
+    '&.MuiChip-colorInfo': {
         backgroundColor: aquaColors.primary, // OPEN: Primary Aqua
         color: aquaColors.white,
     },
-    '&.MuiChip-colorWarning':
-    {
+    '&.MuiChip-colorWarning': {
         backgroundColor: '#ffb300', // IN_PROGRESS: Amber (Standard warning color)
         color: aquaColors.textDark, // Dark text for contrast
     },
-    '&.MuiChip-colorSuccess':
-    {
+    '&.MuiChip-colorSuccess': {
         backgroundColor: '#43a047', // CLOSED: Green (Standard success color)
         color: aquaColors.white,
     },
-    '&.MuiChip-colorDefault':
-    {
+    '&.MuiChip-colorDefault': {
         backgroundColor: aquaColors.backgroundMedium,
         color: aquaColors.textDark,
     },
@@ -110,18 +101,14 @@ const StyledChip = styled(Chip)(({ labelcolor }) => ({
 const ActionIconButton = styled(IconButton)(({ actiontype }) => ({
     // Conditional styling based on actionType prop
     color: actiontype === 'delete' ? aquaColors.deleteRed : aquaColors.editBlue,
-    '&:hover':
-    {
+    '&:hover': {
         backgroundColor: actiontype === 'delete' ? 'rgba(239, 83, 80, 0.1)' : 'rgba(33, 150, 243, 0.1)',
         transform: 'scale(1.1)', // Subtle grow on hover
     },
 }));
 
 const IssueCard = ({ issue, onEdit, onDelete }) => {
-    const { user } = useAuth(); // Using useAuth for current user info
-
-    // Determine if the current user can manage this issue
-    // An issue can be managed by its owner or by a staff user (admin)
+    const { user } = useAuth();
     const canManageIssue = user && (issue.owner?.id === user.id || user.is_staff);
 
     const getStatusColor = (status) => {
@@ -142,30 +129,29 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
     }));
 
     return (
-        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0}>{/* Pass isDragging as prop */}
+        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0}> {/* Pass isDragging as prop */}
             <StyledCardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>{/* Align items to start for multi-line titles */}
-                    <IssueTitle variant="h6" component="div" sx={{ flexGrow: 1, pr: 1 }}>{/* Add right padding to title */}
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}> {/* Align items to start for multi-line titles */}
+                    <IssueTitle variant="h6" component="div" sx={{ flexGrow: 1, pr: 1 }}> {/* Add right padding to title */}
                         {issue.title}
                     </IssueTitle>
                     <StyledChip label={issue.status.replace('_', ' ')} color={getStatusColor(issue.status)} />
                 </Box>
                 <IssueDescription variant="body2">
-                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}{/* Increased substring for more text */}
+                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''} {/* Increased substring for more text */}
                 </IssueDescription>
                 <IssueMetaText variant="caption" display="block">
                     Owner: {issue.owner?.username || 'N/A'}
-                    {/* Display assigned_to only if it exists */}
                     {issue.assigned_to && ` | Assigned to: ${issue.assigned_to?.username || 'N/A'}`}
                 </IssueMetaText>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}>{/* Reduced gap for icon buttons */}
-                    {canManageIssue && ( // Only show edit/delete if user has permission
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}> {/* Reduced gap for icon buttons */}
+                    {canManageIssue && (
                         <>
                             <ActionIconButton
                                 aria-label="edit"
                                 size="small"
                                 onClick={() => onEdit(issue)}
-                                actiontype="edit"// Prop for styled component
+                                actiontype="edit" // Prop for styled component
                             >
                                 <EditIcon fontSize="small" /> {/* Smaller icon for better fit */}
                             </ActionIconButton>
@@ -173,7 +159,7 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                                 aria-label="delete"
                                 size="small"
                                 onClick={() => onDelete(issue.id)}
-                                actiontype="delete"// Prop for styled component
+                                actiontype="delete" // Prop for styled component
                             >
                                 <DeleteIcon fontSize="small" /> {/* Smaller icon for better fit */}
                             </ActionIconButton>

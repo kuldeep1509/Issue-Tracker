@@ -4,18 +4,17 @@ import {
     Typography,
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Select, MenuItem, FormControl, InputLabel,
-    CircularProgress, Box, Alert, Avatar, FormHelperText
+    CircularProgress, Box, Alert, Avatar
 } from '@mui/material';
 import EditNoteIcon from '@mui/icons-material/EditNote'; // Icon for editing/creating notes/issues
-import { createIssue, updateIssue, getAllUsers } from '../services/api'; // Import specific API calls
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { styled } from '@mui/system';// Import styled
+import { styled } from '@mui/system'; // Import styled
 
 // --- Aqua Color Palette Definition (Consistent with other components) ---
-const aquaColors =
-{
+const aquaColors = {
     primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
     primaryLight: '#4dd0e1', // Lighter primary
     primaryDark: '#00838f', // Darker primary for hover
@@ -28,14 +27,12 @@ const aquaColors =
     errorRed: '#ef5350', // Standard Material-UI error red
     cancelButton: '#6c757d', // Muted grey for cancel button
     cancelButtonHover: '#495057', // Darker grey for cancel hover
-    white: '#ffffff', // Explicit white for styled components
 };
 
 // --- Styled Components (Re-used and adapted for Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
-    '& .MuiDialog-paper':
-    {
+    '& .MuiDialog-paper': {
         backgroundColor: '#ffffff',
         borderRadius: '12px',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
@@ -68,38 +65,30 @@ const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
 const AquaTextField = styled(TextField)(({ theme }) => ({
     marginBottom: theme.spacing(3),
 
-    '& .MuiOutlinedInput-root':
-    {
+    '& .MuiOutlinedInput-root': {
         borderRadius: '8px',
-        '& fieldset':
-        {
+        '& fieldset': {
             borderColor: aquaColors.borderLight,
         },
-        '&:hover fieldset':
-        {
+        '&:hover fieldset': {
             borderColor: aquaColors.borderMuted,
         },
-        '&.Mui-focused fieldset':
-        {
+        '&.Mui-focused fieldset': {
             borderColor: aquaColors.primary,
             borderWidth: '2px',
         },
     },
-    '& .MuiInputBase-input':
-    {
+    '& .MuiInputBase-input': {
         padding: '16px 18px',
         color: aquaColors.textDark,
     },
-    '& .MuiInputLabel-root':
-    {
+    '& .MuiInputLabel-root': {
         color: aquaColors.textMuted,
-        '&.Mui-focused':
-        {
+        '&.Mui-focused': {
             color: aquaColors.primary,
         },
     },
-    '& .MuiFormHelperText-root':
-    {
+    '& .MuiFormHelperText-root': {
         color: aquaColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
@@ -109,38 +98,30 @@ const AquaTextField = styled(TextField)(({ theme }) => ({
 const AquaSelectFormControl = styled(FormControl)(({ theme }) => ({
     marginBottom: theme.spacing(3), // Consistent margin with text fields
 
-    '& .MuiOutlinedInput-root':
-    {
+    '& .MuiOutlinedInput-root': {
         borderRadius: '8px',
-        '& fieldset':
-        {
+        '& fieldset': {
             borderColor: aquaColors.borderLight,
         },
-        '&:hover fieldset':
-        {
+        '&:hover fieldset': {
             borderColor: aquaColors.borderMuted,
         },
-        '&.Mui-focused fieldset':
-        {
+        '&.Mui-focused fieldset': {
             borderColor: aquaColors.primary,
             borderWidth: '2px',
         },
     },
-    '& .MuiInputBase-input':
-    {
+    '& .MuiInputBase-input': {
         padding: '16px 18px',
         color: aquaColors.textDark,
     },
-    '& .MuiInputLabel-root':
-    {
+    '& .MuiInputLabel-root': {
         color: aquaColors.textMuted,
-        '&.Mui-focused':
-        {
+        '&.Mui-focused': {
             color: aquaColors.primary,
         },
     },
-    '& .MuiFormHelperText-root':
-    {
+    '& .MuiFormHelperText-root': {
         color: aquaColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
@@ -157,14 +138,12 @@ const AquaButton = styled(Button)(({ theme }) => ({
     fontSize: '1.05rem',
     letterSpacing: '0.7px',
     transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
-    '&:hover':
-    {
+    '&:hover': {
         backgroundColor: aquaColors.primaryDark,
         transform: 'translateY(-2px)',
         boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)',
     },
-    '&:disabled':
-    {
+    '&:disabled': {
         backgroundColor: aquaColors.backgroundMedium,
         color: '#ffffff',
         boxShadow: 'none',
@@ -180,13 +159,11 @@ const CancelButton = styled(Button)(({ theme }) => ({
     fontSize: '1.05rem',
     letterSpacing: '0.7px',
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
-    '&:hover':
-    {
+    '&:hover': {
         backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
         color: aquaColors.cancelButtonHover,
     },
-    '&:disabled':
-    {
+    '&:disabled': {
         color: aquaColors.textMuted,
         opacity: 0.6,
     },
@@ -195,7 +172,7 @@ const CancelButton = styled(Button)(({ theme }) => ({
 
 const IssueModal = ({ open, handleClose, issue, onSave }) => {
     const { user: currentUser } = useAuth();
-    const [users, setUsers] = useState([]); // State to store users for assignment
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -214,11 +191,9 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             .string()
             .oneOf(['OPEN', 'IN_PROGRESS', 'CLOSED'], 'Invalid status selected')
             .required('Status is required'),
-        // assigned_to_id is optional and can be null
         assigned_to_id: yup
             .number()
             .nullable()
-            // Transform 'NONE' string or empty string to null for API
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
             })
@@ -230,30 +205,26 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             title: '',
             description: '',
             status: 'OPEN',
-            assigned_to_id: 'NONE', // Use 'NONE' as a string placeholder for no assignment
+            assigned_to_id: 'NONE',
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
             setLoading(true);
             setError('');
 
-            // Prepare data to send to the API
             const dataToSend = { ...values };
-            // Ensure assigned_to_id is null if 'NONE' or empty string is selected
             if (dataToSend.assigned_to_id === 'NONE' || dataToSend.assigned_to_id === '') {
                 dataToSend.assigned_to_id = null;
             }
 
             try {
                 if (issue) {
-                    // Update existing issue
-                    await updateIssue(issue.id, dataToSend); // Use updateIssue from api.js
+                    await api.patch(`/issues/${issue.id}/`, dataToSend);
                 } else {
-                    // Create new issue
-                    await createIssue(dataToSend); // Use createIssue from api.js
+                    await api.post('/issues/', dataToSend);
                 }
-                onSave(); // Callback to refresh issues list in Dashboard
-                handleCloseModal(); // Close the modal
+                onSave();
+                handleCloseModal();
             } catch (err) {
                 console.error('Error saving issue:', err.response?.data || err);
                 const serverErrors = err.response?.data;
@@ -268,9 +239,9 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                             } else if (typeof errorValue === 'string') {
                                 return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${errorValue}`;
                             }
-                            return ''; // Handle unexpected types
+                            return '';
                         })
-                        .filter(msg => msg !== '') // Filter out empty messages
+                        .filter(msg => msg !== '')
                         .join('; ');
                     errorMessage = `Failed to save issue: ${errorMessages || 'Unknown server error.'}`;
                 } else if (typeof serverErrors === 'string') {
@@ -285,49 +256,42 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
         },
     });
 
-    // Effect to populate form when an issue is passed (for editing)
     useEffect(() => {
-        if (open) { // Only reset/set values when modal is opened
+        if (open) {
             if (issue) {
                 formik.setValues({
                     title: issue.title,
                     description: issue.description || '',
                     status: issue.status,
-                    // Set assigned_to_id to user's ID or 'NONE' if not assigned
                     assigned_to_id: issue.assigned_to?.id ? issue.assigned_to.id : 'NONE',
-                }, false); // Set values without validating immediately
+                }, false);
             } else {
-                formik.resetForm(); // Reset for new issue creation
+                formik.resetForm();
             }
-            setError(''); // Clear any previous errors when opening
+            setError('');
         }
-    }, [issue, open, formik.resetForm, formik.setValues]);
+    }, [issue, open]);
 
-
-    // Fetch users for assignment dropdown
     const fetchUsers = useCallback(async () => {
-        if (!open) return; // Only fetch when modal is open
+        if (!open) return;
         try {
-            const response = await getAllUsers(); // Using getAllUsers from api.js
+            const response = await api.get('/issues/all_users/');
             setUsers(response.data);
         } catch (err) {
             console.error("Failed to fetch users for assignment:", err.response?.data || err.message);
-            setError('Failed to load users for assignment. Please try again.');
         }
     }, [open]);
 
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]); // Refetch users when fetchUsers dependency changes (e.g., modal opens)
+    }, [fetchUsers]);
 
     const handleCloseModal = () => {
-        formik.resetForm(); // Reset form on close
-        setError(''); // Clear errors
-        handleClose(); // Call parent's handleClose
+        formik.resetForm();
+        setError('');
+        handleClose();
     };
 
-    // Determine if the current user can assign an issue.
-    // Only the issue owner or a staff user can assign/reassign.
     const canAssign = currentUser && (issue?.owner?.id === currentUser.id || currentUser.is_staff);
 
     return (
@@ -370,8 +334,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                         helperText={formik.touched.description && formik.errors.description}
                     />
 
-                    <AquaSelectFormControl
-                        fullWidth
+                    <AquaSelectFormControl fullWidth
                         error={formik.touched.status && Boolean(formik.errors.status)}
                     >
                         <InputLabel id="status-label">Status</InputLabel>
@@ -389,44 +352,41 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                             <MenuItem value="CLOSED">Closed</MenuItem>
                         </Select>
                         {formik.touched.status && formik.errors.status && (
-                            <FormHelperText>{formik.errors.status}</FormHelperText>
+                            <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                {formik.errors.status}
+                            </Typography>
                         )}
                     </AquaSelectFormControl>
 
-                    {/* Assigned To Select - conditionally rendered/disabled */}
-                    <AquaSelectFormControl
-                        fullWidth
-                        disabled={!canAssign} // Disable if user cannot assign
-                        error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
-                    >
-                        <InputLabel id="assigned-to-label">Assigned To</InputLabel>
-                        <Select
-                            labelId="assigned-to-label"
-                            id="assigned_to_id"
-                            name="assigned_to_id"
-                            value={formik.values.assigned_to_id}
-                            label="Assigned To"
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                    {canAssign && (
+                        <AquaSelectFormControl fullWidth
+                            error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
                         >
-                            <MenuItem value="NONE">
-                                <em>Unassigned</em>
-                            </MenuItem>
-                            {users.map((userOption) => (
-                                <MenuItem key={userOption.id} value={userOption.id}>
-                                    {userOption.username} ({userOption.email})
+                            <InputLabel id="assigned-to-label">Assigned To</InputLabel>
+                            <Select
+                                labelId="assigned-to-label"
+                                id="assigned_to_id"
+                                name="assigned_to_id"
+                                value={formik.values.assigned_to_id}
+                                label="Assigned To"
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                displayEmpty
+                            >
+                                <MenuItem value="NONE">
+                                    <em>None</em>
                                 </MenuItem>
-                            ))}
-                        </Select>
-                        {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
-                            <FormHelperText>{formik.errors.assigned_to_id}</FormHelperText>
-                        )}
-                        {!canAssign && (
-                            <FormHelperText>
-                                Only the issue owner or a staff member can assign issues.
-                            </FormHelperText>
-                        )}
-                    </AquaSelectFormControl>
+                                {users.map(u => (
+                                    <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
+                                ))}
+                            </Select>
+                            {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
+                                <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                    {formik.errors.assigned_to_id}
+                                </Typography>
+                            )}
+                        </AquaSelectFormControl>
+                    )}
                 </Box>
             </StyledDialogContent>
             <StyledDialogActions>
@@ -436,10 +396,9 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                 <AquaButton
                     onClick={formik.handleSubmit}
                     variant="contained"
-                    // Disable if loading, form is invalid, or no changes for existing issue
-                    disabled={loading || !formik.isValid || (issue && !formik.dirty)}
+                    disabled={loading || !formik.isValid || !formik.dirty}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : (issue ? 'Save Changes' : 'Create Issue')}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
                 </AquaButton>
             </StyledDialogActions>
         </StyledDialog>
