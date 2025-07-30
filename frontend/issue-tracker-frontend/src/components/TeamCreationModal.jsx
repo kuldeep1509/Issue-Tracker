@@ -1,12 +1,12 @@
-// src/components/InviteTeamMemberModal.js
+// src/components/TeamCreationModal.js
 import React, { useState } from 'react';
 import {
+    Typography,
     Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, Typography, Alert, CircularProgress,
-    Box, Avatar,
+    TextField, Button, CircularProgress, Box, Alert, Avatar
 } from '@mui/material';
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'; // Icon for inviting a person
-import { register as apiRegister } from '../services/api'; // Use the specific register function
+import GroupAddIcon from '@mui/icons-material/GroupAdd'; // Icon for adding a team
+import { createTeam } from '../services/api'; // Import specific API call
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system';
@@ -39,37 +39,37 @@ const StyledDialog = styled(Dialog)(({ theme }) =>
         borderRadius: '12px',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
         border: `1px solid ${aquaColors.backgroundMedium}`,
-        padding: theme.spacing(2), // Overall padding inside the dialog paper
+        padding: theme.spacing(2),
     },
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) =>
 ({
     textAlign: 'center',
-    paddingBottom: theme.spacing(1), // Less padding at bottom for title
+    paddingBottom: theme.spacing(1),
     color: aquaColors.textDark,
     fontWeight: 700,
-    fontSize: '1.75rem', // Larger title for prominence
+    fontSize: '1.75rem',
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) =>
 ({
-    padding: theme.spacing(3), // Generous padding for content
-    paddingTop: theme.spacing(1), // Adjust top padding to bring content closer to title
+    padding: theme.spacing(3),
+    paddingTop: theme.spacing(1),
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) =>
 ({
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(1), // Adjust top padding to bring buttons closer
-    justifyContent: 'center', // Center the action buttons
-    borderTop: `1px solid ${aquaColors.backgroundLight}`, // Subtle separator
-    marginTop: theme.spacing(2), // Space above the actions
+    paddingTop: theme.spacing(1),
+    justifyContent: 'center',
+    borderTop: `1px solid ${aquaColors.backgroundLight}`,
+    marginTop: theme.spacing(2),
 }));
 
 const AquaTextField = styled(TextField)(({ theme }) =>
 ({
-    marginBottom: theme.spacing(3), // Consistent vertical margin
+    marginBottom: theme.spacing(3),
 
     '& .MuiOutlinedInput-root':
     {
@@ -90,7 +90,7 @@ const AquaTextField = styled(TextField)(({ theme }) =>
     },
     '& .MuiInputBase-input':
     {
-        padding: '16px 18px', // Consistent internal padding
+        padding: '16px 18px',
         color: aquaColors.textDark,
     },
     '& .MuiInputLabel-root':
@@ -108,6 +108,7 @@ const AquaTextField = styled(TextField)(({ theme }) =>
         marginBottom: 0,
     }
 }));
+
 
 const AquaButton = styled(Button)(({ theme }) => ({
     backgroundColor: aquaColors.primary,
@@ -143,7 +144,7 @@ const CancelButton = styled(Button)(({ theme }) => ({
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
     '&:hover':
     {
-        backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
+        backgroundColor: 'rgba(108, 117, 125, 0.1)',
         color: aquaColors.cancelButtonHover,
     },
     '&:disabled':
@@ -154,62 +155,43 @@ const CancelButton = styled(Button)(({ theme }) => ({
 }));
 
 
-const InviteTeamMemberModal = ({ open, handleClose }) => {
+const TeamCreationModal = ({ open, handleClose, onTeamCreated }) => {
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
-    const [severity, setSeverity] = useState('info');
+    const [error, setError] = useState('');
 
-    // Validation schema for inviting a new user (account creation)
     const validationSchema = yup.object({
-        username: yup
+        name: yup
             .string()
             .trim()
-            .min(3, 'Username must be at least 3 characters')
-            .max(50, 'Username must not exceed 50 characters')
-            .required('Username is required'),
-        email: yup
+            .required('Team name is required')
+            .min(3, 'Team name must be at least 3 characters')
+            .max(100, 'Team name cannot exceed 100 characters'),
+        description: yup
             .string()
             .trim()
-            .email('Enter a valid email')
-            .required('Email is required'),
-        password: yup
-            .string()
-            .min(8, 'Password must be at least 8 characters')
-            .required('Password is required'),
-        re_password: yup // Djoser expects 're_password' if REST_AUTH_REGISTER_SERIALIZERS is custom
-            .string()
-            .oneOf([yup.ref('password'), null], 'Passwords must match')
-            .required('Confirm Password is required'),
+            .nullable()
+            .max(500, 'Description cannot exceed 500 characters'),
     });
 
     const formik = useFormik({
         initialValues: {
-            username: '',
-            email: '',
-            password: '',
-            re_password: '', // This field is for client-side validation and sent if your Djoser config needs it
+            name: '',
+            description: '',
         },
         validationSchema: validationSchema,
         onSubmit: async (values, { resetForm }) => {
             setLoading(true);
-            setMessage('');
-            setSeverity('info');
+            setError('');
 
             try {
-                // Call the register function from services/api.js
-                // apiRegister handles the API call to /auth/users/
-                // Djoser's /auth/users/ endpoint typically expects username, email, password
-                // re_password is usually for client-side validation unless your custom serializer expects it.
-                await apiRegister(values.username, values.email, values.password);
-
-                setMessage('Team member invited (account created successfully)! They can now login.');
-                setSeverity('success');
+                const response = await createTeam(values); // Call createTeam from api.js
+                onTeamCreated(response.data); // Pass the new team data back to parent
                 resetForm();
-            } catch (error) {
-                console.error("Error inviting user:", error.response?.data || error);
-
-                const serverErrors = error.response?.data;
-                let errorMessage = 'Failed to invite team member. Please try again.';
+                handleClose();
+            } catch (err) {
+                console.error('Error creating team:', err.response?.data || err);
+                const serverErrors = err.response?.data;
+                let errorMessage = 'Failed to create team. Please try again.';
 
                 if (typeof serverErrors === 'object' && serverErrors !== null) {
                     const errorMessages = Object.keys(serverErrors)
@@ -222,17 +204,15 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                             }
                             return '';
                         })
-                        .filter(msg => msg !== '') // Filter out empty messages
+                        .filter(msg => msg !== '')
                         .join('; ');
-                    errorMessage = `Failed to invite team member: ${errorMessages}`;
+                    errorMessage = `Failed to create team: ${errorMessages || 'Unknown server error.'}`;
                 } else if (typeof serverErrors === 'string') {
-                    errorMessage = 'An unexpected server error occurred. Check backend console.';
-                    console.error("Backend returned HTML error:", serverErrors);
-                } else if (error.message) {
-                    errorMessage = `Network error: ${error.message}`;
+                    errorMessage = `An unexpected server error occurred: ${serverErrors}`;
+                } else if (err.message) {
+                    errorMessage = `Network error: ${err.message}`;
                 }
-                setMessage(errorMessage);
-                setSeverity('error');
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -241,8 +221,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
 
     const handleCloseModal = () => {
         formik.resetForm();
-        setMessage('');
-        setSeverity('info');
+        setError('');
         handleClose();
     };
 
@@ -250,72 +229,39 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
             <StyledDialogTitle>
                 <Avatar sx={{ m: 'auto', mb: 2, bgcolor: aquaColors.primary, width: 64, height: 64 }}>
-                    <PersonAddAlt1Icon sx={{ fontSize: 36 }} />
+                    <GroupAddIcon sx={{ fontSize: 36 }} />
                 </Avatar>
-                Invite New Team Member
+                Create New Team
             </StyledDialogTitle>
             <StyledDialogContent>
-                <Typography variant="body2" color={aquaColors.textMuted} sx={{ mb: 3, textAlign: 'center' }}>
-                    This will create a new user account. Share the credentials securely with the invited team member.
-                </Typography>
-                {message && <Alert severity={severity} sx={{ mb: 3, borderRadius: '6px' }}>{message}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '6px' }}>{error}</Alert>}
 
                 <Box component="form" onSubmit={formik.handleSubmit} noValidate>
                     <AquaTextField
                         autoFocus
-                        label="Username"
+                        label="Team Name"
                         type="text"
                         fullWidth
-                        variant="outlined"
-                        name="username"
-                        value={formik.values.username}
+                        name="name"
+                        value={formik.values.name}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.username && Boolean(formik.errors.username)}
-                        helperText={formik.touched.username && formik.errors.username}
+                        error={formik.touched.name && Boolean(formik.errors.name)}
                         required
+                        helperText={formik.touched.name && formik.errors.name}
                     />
-
                     <AquaTextField
-                        label="Email"
-                        type="email"
+                        label="Description (Optional)"
+                        type="text"
                         fullWidth
-                        variant="outlined"
-                        name="email"
-                        value={formik.values.email}
+                        multiline
+                        rows={4}
+                        name="description"
+                        value={formik.values.description}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.email && Boolean(formik.errors.email)}
-                        helperText={formik.touched.email && formik.errors.email}
-                        required
-                    />
-
-                    <AquaTextField
-                        label="Password"
-                        type="password"
-                        fullWidth
-                        variant="outlined"
-                        name="password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.password && Boolean(formik.errors.password)}
-                        helperText={formik.touched.password && formik.errors.password}
-                        required
-                    />
-
-                    <AquaTextField
-                        label="Confirm Password"
-                        type="password"
-                        fullWidth
-                        variant="outlined"
-                        name="re_password"
-                        value={formik.values.re_password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.re_password && Boolean(formik.errors.re_password)}
-                        helperText={formik.touched.re_password && formik.errors.re_password}
-                        required
+                        error={formik.touched.description && Boolean(formik.errors.description)}
+                        helperText={formik.touched.description && formik.errors.description}
                     />
                 </Box>
             </StyledDialogContent>
@@ -328,11 +274,11 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                     variant="contained"
                     disabled={loading || !formik.isValid || !formik.dirty}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Team'}
                 </AquaButton>
             </StyledDialogActions>
         </StyledDialog>
     );
 };
 
-export default InviteTeamMemberModal;
+export default TeamCreationModal;
