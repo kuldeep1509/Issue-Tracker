@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = 'https://your-issue-tracker-backend.onrender.com/api'; 
+const API_BASE_URL = 'https://issue-tracker-q9v4.onrender.com/api'; 
 
 const api = axios.create({
     baseURL: API_BASE_URL,
