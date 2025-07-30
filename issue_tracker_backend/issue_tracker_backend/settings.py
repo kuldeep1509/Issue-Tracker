@@ -32,14 +32,10 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-s3qna+j6&!r%hog+96-!)
 # MODIFIED: Load DEBUG from env, default True for local
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
-# MODIFIED: Use environment variable for Render and fall back to empty list for local
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-ALLOWED_HOSTS.append('https://issue-tracker-s3ys.onrender.com') # Always allow localhost for local dev
-# NEW: Add your custom backend domain here if you set one up in Render (e.g., "yourbackend.com")
-# ALLOWED_HOSTS.append('yourbackend.com')
+ALLOWED_HOSTS = [".vercel.app","issue-tracker-s3ys.onrender.com",'localhost']
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 
 # Application definition
@@ -223,6 +219,9 @@ CORS_ALLOWED_ORIGINS = [
     # Make sure it uses HTTPS in production
 ]
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "https://issue-tracker-chi-swart.vercel.app",
+]
 
 CORS_ALLOW_HEADERS = [
     'accept',
