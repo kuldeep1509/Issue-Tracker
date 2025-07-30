@@ -1,6 +1,6 @@
 # issues/admin.py
 from django.contrib import admin
-from .models import Issue , Team
+from .models import Issue
 
 @admin.register(Issue)
 class IssueAdmin(admin.ModelAdmin):
@@ -16,4 +16,3 @@ class IssueAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
 
-admin.site.register(Team)
