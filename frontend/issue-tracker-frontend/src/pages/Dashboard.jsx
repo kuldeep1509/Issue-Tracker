@@ -328,7 +328,7 @@ const Dashboard = () => {
 
     const handleDeleteTeam = async (teamId, teamName, teamOwnerId) => {
         // Only allow deletion by the team owner or an admin
-         if (user?.id !== teamOwnerId || !user?.is_staff) {
+         if (user?.id !== teamOwnerId && !user?.is_staff) {
             setError("You do not have permission to delete this team. Only the team creator or an admin can delete a team.");
             return;
         }
