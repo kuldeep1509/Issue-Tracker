@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container, Typography, Box, Button, CircularProgress, Alert,
-    ToggleButtonGroup, ToggleButton, Grid
+    ToggleButtonGroup, ToggleButton, Grid, Paper, Chip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import GroupAddIcon from '@mui/icons-material/GroupAdd'; // Added for team creation button
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import IssueCard from '../components/IssueCard';
 import IssueModal from '../components/IssueModal';
 import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
@@ -25,13 +25,14 @@ const Dashboard = () => {
     const { user, isAuthenticated } = useAuth();
 
     const [issues, setIssues] = useState([]);
+    const [teams, setTeams] = useState([]); // New state for teams
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [openIssueModal, setOpenIssueModal] = useState(false);
     const [currentIssue, setCurrentIssue] = useState(null);
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [openInviteModal, setOpenInviteModal] = useState(false);
-    const [showTeamForm, setShowTeamForm] = useState(false); // New state for TeamForm visibility
+    const [showTeamForm, setShowTeamForm] = useState(false);
 
     const fetchIssues = useCallback(async (statusFilter = 'ALL') => {
         setLoading(true);
@@ -59,11 +60,34 @@ const Dashboard = () => {
         }
     }, [user]);
 
+    // New function to fetch teams
+    const fetchTeams = useCallback(async () => {
+        try {
+            // Reverted to '/issues/all_users/' as per the reported "Not Found" error
+            // and previous context, assuming this endpoint handles team data on your backend.
+            // For better API design, consider a dedicated '/api/teams/' endpoint.
+            const response = await api.get('/issues/all_users/'); 
+            if (Array.isArray(response.data)) {
+                setTeams(response.data);
+            } else if (response.data && Array.isArray(response.data.results)) {
+                setTeams(response.data.results);
+            } else {
+                console.warn("Unexpected API response structure for teams:", response.data);
+                setTeams([]);
+            }
+        } catch (err) {
+            console.error('Failed to fetch teams:', err.response?.data || err.message);
+            // Don't set a global error for teams if issues are still loading
+        }
+    }, []);
+
+    // Effect to fetch issues and teams on component mount or auth change
     useEffect(() => {
         if (isAuthenticated) {
             fetchIssues(filterStatus);
+            fetchTeams(); // Fetch teams when authenticated
         }
-    }, [isAuthenticated, filterStatus, fetchIssues]);
+    }, [isAuthenticated, filterStatus, fetchIssues, fetchTeams]);
 
     const handleCreateIssue = () => {
         setCurrentIssue(null);
@@ -81,12 +105,9 @@ const Dashboard = () => {
     };
 
     const handleDeleteIssue = async (issueId) => {
-        // IMPORTANT: Replaced window.confirm with a custom modal or a more robust solution
-        // as window.confirm is blocked in the Canvas environment.
-        // For this example, I'm using a simple console log. In a real app,
-        // you'd implement a custom Material-UI Dialog for confirmation.
         console.log(`Attempting to delete issue ${issueId}`);
-        const confirmDelete = true; // Replace with actual custom confirmation logic
+        // In a real app, implement a custom Material-UI Dialog for confirmation.
+        const confirmDelete = window.confirm("Are you sure you want to delete this issue?"); // Re-added for testing, but replace with custom modal
         if (confirmDelete) {
             try {
                 await api.delete(`/issues/${issueId}/`);
@@ -111,6 +132,7 @@ const Dashboard = () => {
         if (issueToMove.owner.id !== user.id && !user.is_staff) {
             // IMPORTANT: Replaced alert with a console log. Implement a custom Material-UI Snackbar or Dialog for user feedback.
             console.log("Only admin can modify the status");
+            setError("You do not have permission to change the status of this issue."); // Provide user feedback
             return;
         }
 
@@ -124,7 +146,7 @@ const Dashboard = () => {
         } catch (err) {
             console.error('Failed to update issue status:', err.response?.data || err.message);
             setError('Failed to update issue status on server.');
-            fetchIssues(filterStatus);
+            fetchIssues(filterStatus); // Re-fetch to revert if update fails
         }
     }, [issues, user, fetchIssues, filterStatus]);
 
@@ -233,14 +255,13 @@ const Dashboard = () => {
                         >
                             Create Issue
                         </Button>
-                        {/* New Button to show TeamForm */}
                         <Button
                             variant="contained"
-                            startIcon={<GroupAddIcon />} // Using GroupAddIcon for teams
-                            onClick={() => setShowTeamForm(true)}
+                            startIcon={<GroupAddIcon />}
+                            onClick={() => setShowTeamForm(!showTeamForm)} // Toggle TeamForm visibility
                             sx={{ mr: 2 }}
                         >
-                            Create Team
+                            {showTeamForm ? 'Hide Team Form' : 'Create Team'}
                         </Button>
                         {user?.is_staff && (
                             <Button
@@ -277,16 +298,14 @@ const Dashboard = () => {
                         maxWidth: 600,
                         margin: '0 auto',
                         mt: 4,
-                        mb: 4, // Added margin-bottom for spacing
+                        mb: 4,
                         p: 3,
                         backgroundColor: '#fefefe',
                         borderRadius: 2,
                         boxShadow: 3
                     }}>
-                        <Typography variant="h5" gutterBottom align="center">
-                            Create a New Team
-                        </Typography>
-                        <TeamForm />
+                        {/* Pass fetchTeams as a callback to refresh teams after creation */}
+                        <TeamForm onTeamCreated={fetchTeams} /> 
                         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                             <Button variant="outlined" onClick={() => setShowTeamForm(false)}>
                                 Close Team Form
@@ -294,6 +313,41 @@ const Dashboard = () => {
                         </Box>
                     </Box>
                 )}
+
+                {/* Display Teams Section */}
+                <Box sx={{ mt: 4, mb: 4, p: 3, backgroundColor: '#f9f9f9', borderRadius: 2, boxShadow: 1 }}>
+                    <Typography variant="h5" gutterBottom align="center">
+                        Your Teams
+                    </Typography>
+                    {teams.length === 0 ? (
+                        <Typography variant="body2" color="textSecondary" align="center">
+                            No teams created yet. Create a team using the "Create Team" button above.
+                        </Typography>
+                    ) : (
+                        <Grid container spacing={2}>
+                            {teams.map((team) => (
+                                <Grid item xs={12} sm={6} md={4} key={team.id}>
+                                    <Paper sx={{ p: 2, border: '1px solid #eee', borderRadius: 2 }}>
+                                        <Typography variant="subtitle1" fontWeight="bold">{team.name}</Typography>
+                                        <Typography variant="body2" color="textSecondary" mt={1}>Members:</Typography>
+                                        <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                            {(team.members ?? []).map((member) => (
+                                                <Chip
+                                                    key={member.id || member}
+                                                    label={typeof member === 'object' ? member.username : member}
+                                                    color="primary"
+                                                    variant="outlined"
+                                                    size="small"
+                                                />
+                                            ))}
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                </Box>
+
 
                 {/* Kanban Board */}
                 <Grid
