@@ -327,7 +327,7 @@ const Dashboard = () => {
     const fetchTeams = useCallback(fetchTeamsData, []);
 
     const handleDeleteTeam = async (teamId, teamName, teamOwnerId) => {
-        // Only allow deletion by the team owner or an admin
+        
          if (user?.id !== teamOwnerId && !user?.is_staff) {
             setError("You do not have permission to delete this team. Only the team creator or an admin can delete a team.");
             return;
@@ -337,8 +337,8 @@ const Dashboard = () => {
         if (confirmDelete) {
             try {
                 await api.delete(`teams/${teamId}/`);
-                fetchTeams(); // Re-fetch teams to update the list
-                setError(''); // Clear any previous error
+                fetchTeams();
+                setError('');
             } catch (err) {
                 console.error('Failed to delete team:', err.response?.data || err.message);
                 setError(`Failed to delete team: ${err.response?.data?.detail || err.message || 'Unknown error'}`);

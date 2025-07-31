@@ -4,14 +4,15 @@ import {
     Typography,
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Select, MenuItem, FormControl, InputLabel,
-    CircularProgress, Box, Alert, Avatar
+    CircularProgress, Box, Alert, Avatar, InputAdornment // Import InputAdornment
 } from '@mui/material';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'; // Icon for AI generation
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { styled, useTheme } from '@mui/system'; // Import useTheme
+import { styled, useTheme } from '@mui/system';
 
 // --- Jira-like Color Palette Definition (Consistent with other components) ---
 const jiraColors = {
@@ -29,7 +30,7 @@ const jiraColors = {
     chipBgOpen: '#e9f2ff', // Light blue for chips (used in pre-assigned team box)
 };
 
-// --- Styled Components (Adapted for Jira-like Dialog) ---
+// --- Styled Components (Adapted           Jira-like Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -175,6 +176,8 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [generatingDescription, setGeneratingDescription] = useState(false); // New state for description generation loading
+    const [descriptionGenerationError, setDescriptionGenerationError] = useState(''); // New state for description generation error
     const theme = useTheme(); // Use theme hook
 
     // Determine if the modal is opened specifically for pre-assigning to a team
@@ -245,10 +248,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             }
 
             try {
-                // Frontend allows any authenticated user to attempt to save changes.
-                // Backend permissions (e.g., Django REST Framework permissions)
-                // are responsible for enforcing who can actually modify an issue,
-                // including its status and assignments.
                 if (issue) {
                     await api.patch(`issues/${issue.id}/`, dataToSend);
                 } else {
@@ -308,6 +307,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 }, false);
             }
             setError('');
+            setDescriptionGenerationError(''); // Clear description generation error on open
         }
     }, [issue, open, initialAssignedTeam]);
 
@@ -331,7 +331,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             } else if (response.data && Array.isArray(response.data.results)) {
                 setTeams(response.data.results);
             } else {
-                console.warn("Unexpected API response structure for teams in IssueModal:", response.data);
+                console.warn("Unexpected API response structure for teams:", response.data);
                 setTeams([]); // Ensure it's always an array
             }
         } catch (err) {
@@ -348,6 +348,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     const handleCloseModal = () => {
         formik.resetForm();
         setError('');
+        setDescriptionGenerationError('');
         handleClose();
     };
 
@@ -356,6 +357,77 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     // Determine if a user or team is currently selected (not 'NONE' or null)
     const isUserCurrentlySelected = formik.values.assigned_to_id !== 'NONE' && formik.values.assigned_to_id !== null;
     const isTeamCurrentlySelected = formik.values.assigned_team_id !== 'NONE' && formik.values.assigned_team_id !== null;
+
+    const generateDescription = async () => {
+        setGeneratingDescription(true);
+        setDescriptionGenerationError('');
+
+        let prompt = `Generate a concise and professional description for an issue.`;
+        if (formik.values.title) {
+            prompt += ` The issue title is: "${formik.values.title}".`;
+        } else {
+            prompt += ` The user has not provided a title yet. Please provide a general template for a software bug report or feature request description.`;
+        }
+        prompt += ` Focus on clarity and actionable information. Keep it under 200 words.`;
+
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        // The apiKey is automatically provided by the Canvas environment when left as an empty string.
+        // A 403 (Forbidden) error typically means the API key is missing, invalid, or lacks necessary permissions.
+        // Ensure your Canvas environment is correctly configured with a valid Gemini API key.
+        const apiKey = "AIzaSyD50Lt_ubYlkTPYhMjgqbIrfeKr5L3-p7Q"; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        let retries = 0;
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
+
+        while (retries < maxRetries) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    // If the status is 403, it's likely an API key issue, no need to retry
+                    if (response.status === 403) {
+                        setDescriptionGenerationError('Permission denied: Please ensure a valid Gemini API key is configured in your environment.');
+                        throw new Error('API Key Forbidden (403)'); // Break out of retry loop
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    formik.setFieldValue('description', text);
+                    break; // Exit loop on success
+                } else {
+                    throw new Error('Unexpected API response structure or no content.');
+                }
+            } catch (err) {
+                console.error('Error generating description:', err);
+                if (err.message === 'API Key Forbidden (403)') {
+                    break; // Do not retry for 403 errors
+                }
+                if (retries < maxRetries - 1) {
+                    const delay = baseDelay * Math.pow(2, retries);
+                    console.log(`Retrying in ${delay / 1000} seconds...`);
+                    await new Promise(res => setTimeout(res, delay));
+                    retries++;
+                } else {
+                    setDescriptionGenerationError('Failed to generate description after multiple attempts. Please try again later.');
+                }
+            }
+        }
+        setGeneratingDescription(false);
+    };
+
 
     return (
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
@@ -367,6 +439,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             </StyledDialogTitle>
             <StyledDialogContent>
                 {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
+                {descriptionGenerationError && <Alert severity="warning" sx={{ mb: 2, borderRadius: '3px', fontSize: '0.875rem' }}>{descriptionGenerationError}</Alert>}
 
                 <Box component="form" onSubmit={formik.handleSubmit} noValidate>
                     <JiraTextField
@@ -396,6 +469,36 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                         onBlur={formik.handleBlur}
                         error={formik.touched.description && Boolean(formik.errors.description)}
                         helperText={formik.touched.description && formik.errors.description}
+                        InputProps={{ // Add InputProps to attach the button
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <Button
+                                        onClick={generateDescription}
+                                        disabled={generatingDescription}
+                                        variant="text"
+                                        size="small"
+                                        sx={{
+                                            textTransform: 'none',
+                                            color: jiraColors.primaryBlue,
+                                            '&:hover': {
+                                                backgroundColor: 'transparent',
+                                                textDecoration: 'underline',
+                                            },
+                                            minWidth: 'auto', // Allow button to shrink
+                                            padding: '4px 8px', // Adjust padding
+                                        }}
+                                    >
+                                        {generatingDescription ? (
+                                            <CircularProgress size={16} color="inherit" />
+                                        ) : (
+                                            <>
+                                                <AutoFixHighIcon sx={{ fontSize: 18, mr: 0.5 }} /> Generate
+                                            </>
+                                        )}
+                                    </Button>
+                                </InputAdornment>
+                            ),
+                        }}
                     />
 
                     <JiraSelectFormControl fullWidth
@@ -522,13 +625,13 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 </Box>
             </StyledDialogContent>
             <StyledDialogActions>
-                <CancelButton onClick={handleCloseModal} disabled={loading}>
+                <CancelButton onClick={handleCloseModal} disabled={loading || generatingDescription}>
                     Cancel
                 </CancelButton>
                 <JiraButton
                     onClick={formik.handleSubmit}
                     variant="contained"
-                    disabled={loading || !formik.isValid || !formik.dirty}
+                    disabled={loading || generatingDescription || !formik.isValid || !formik.dirty}
                 >
                     {loading ? <CircularProgress size={20} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
                 </JiraButton>
