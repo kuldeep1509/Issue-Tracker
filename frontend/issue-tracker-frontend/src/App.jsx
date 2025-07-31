@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import { CssBaseline } from '@mui/material'; // Material-UI's CSS reset
+import TeamForm from './pages/TeamForm';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
                         <Route element={<ProtectedRoute />}>
                             <Route index element={<Dashboard />} /> {/* Default route for authenticated users */}
                             <Route path="dashboard" element={<Dashboard />} /> {/* Explicit dashboard route */}
+                            <Route path="/teams" element={<TeamForm />} />
                             {/* Add more protected routes here as your app grows */}
                         </Route>
 

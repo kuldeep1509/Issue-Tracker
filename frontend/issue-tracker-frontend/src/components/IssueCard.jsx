@@ -1,10 +1,9 @@
-// src/components/IssueCard.js
 import { Card, CardContent, Typography, Chip, IconButton, Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDrag } from 'react-dnd';
 import { useAuth } from '../context/AuthContext';
-import { styled } from '@mui/system'; // Import styled
+import { styled } from '@mui/system';
 
 const ItemTypes = {
     ISSUE: 'issue'
@@ -23,11 +22,14 @@ const aquaColors = {
     cardBorder: '#e0f7fa', // Very light aqua border for cards
     deleteRed: '#ef5350', // Standard Material-UI error red for delete
     editBlue: '#2196f3', // Standard Material-UI blue for edit (can be adjusted to aqua if desired)
+    white: '#ffffff', // Added white to color palette for chips
 };
 
 // --- Styled Components for IssueCard ---
 
 const StyledIssueCard = styled(Card)(({ isdragging }) => ({
+    // THIS IS THE CRUCIAL LINE FOR ISSUE CARD WIDTH
+    width: '100%',
     marginBottom: '16px', // Standard spacing between cards
     opacity: isdragging ? 0.6 : 1, // Slightly more opaque when dragging
     cursor: 'grab',
@@ -129,39 +131,39 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
     }));
 
     return (
-        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0}> {/* Pass isDragging as prop */}
+        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0}>
             <StyledCardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}> {/* Align items to start for multi-line titles */}
-                    <IssueTitle variant="h6" component="div" sx={{ flexGrow: 1, pr: 1 }}> {/* Add right padding to title */}
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                    <IssueTitle variant="h6" component="div" sx={{ flexGrow: 1, pr: 1 }}>
                         {issue.title}
                     </IssueTitle>
                     <StyledChip label={issue.status.replace('_', ' ')} color={getStatusColor(issue.status)} />
                 </Box>
                 <IssueDescription variant="body2">
-                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''} {/* Increased substring for more text */}
+                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
                 </IssueDescription>
                 <IssueMetaText variant="caption" display="block">
                     Owner: {issue.owner?.username || 'N/A'}
                     {issue.assigned_to && ` | Assigned to: ${issue.assigned_to?.username || 'N/A'}`}
                 </IssueMetaText>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}> {/* Reduced gap for icon buttons */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}>
                     {canManageIssue && (
                         <>
                             <ActionIconButton
                                 aria-label="edit"
                                 size="small"
                                 onClick={() => onEdit(issue)}
-                                actiontype="edit" // Prop for styled component
+                                actiontype="edit"
                             >
-                                <EditIcon fontSize="small" /> {/* Smaller icon for better fit */}
+                                <EditIcon fontSize="small" />
                             </ActionIconButton>
                             <ActionIconButton
                                 aria-label="delete"
                                 size="small"
                                 onClick={() => onDelete(issue.id)}
-                                actiontype="delete" // Prop for styled component
+                                actiontype="delete"
                             >
-                                <DeleteIcon fontSize="small" /> {/* Smaller icon for better fit */}
+                                <DeleteIcon fontSize="small" />
                             </ActionIconButton>
                         </>
                     )}

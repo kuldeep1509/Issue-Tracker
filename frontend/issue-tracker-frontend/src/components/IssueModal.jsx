@@ -292,7 +292,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
         handleClose();
     };
 
-    const canAssign = currentUser && (issue?.owner?.id === currentUser.id || currentUser.is_staff);
+    const canAssign = !!currentUser;
 
     return (
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
@@ -386,6 +386,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                                 </Typography>
                             )}
                         </AquaSelectFormControl>
+
                     )}
                 </Box>
             </StyledDialogContent>

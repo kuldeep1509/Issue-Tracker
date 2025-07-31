@@ -1,54 +1,63 @@
 # issues/serializers.py
-from rest_framework import serializers #Comes from DRF. Used to convert models to JSON and vice versa.
+from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Issue
-from djoser.serializers import UserSerializer as DjoserUserSerializer #  Default user serializer provided by Djoser for API responses.
+from .models import Issue, Team
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 
 User = get_user_model()
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'is_staff', 'is_superuser') # Include is_staff and is_superuser!
+        fields = ('id', 'username', 'email', 'is_staff', 'is_superuser')
         read_only_fields = ('username', 'email', 'is_staff', 'is_superuser')
 
-# This serializer is for displaying user details within IssueSerializer.
-# We are using Djoser's default for simplicity, as configured in settings.py.
 class SimpleUserSerializer(DjoserUserSerializer):
-    '''
-    Used inside the IssueSerializer to show user details of owner and assigned_to.
-
-    Inherits from Djoser’s default UserSerializer for consistency.
-
-    Shows only id, username, and email. 
-    '''
     class Meta(DjoserUserSerializer.Meta):
         model = User
-        fields = ('id', 'username', 'email') # Expose basic user info
+        fields = ('id', 'username', 'email')
 
-# Issue Serializer
-class IssueSerializer(serializers.ModelSerializer): #handles reading and writing issues.
-    owner = SimpleUserSerializer(read_only=True) # Display owner's details, read-only
-    assigned_to = SimpleUserSerializer(read_only=True) # Display assigned_to details, read-only
-    
-    # This field is for accepting assigned_to user ID in write operations (create/update)
+class TeamSerializer(serializers.ModelSerializer):
+    created_by = SimpleUserSerializer(read_only=True)
+    members = SimpleUserSerializer(many=True, read_only=True)
+    member_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all(),
+        write_only=True,
+        source='members'
+    )
+
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'description', 'created_by', 'members', 'member_ids', 'created_at']
+        read_only_fields = ['created_by', 'created_at']
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+class IssueSerializer(serializers.ModelSerializer):
+    owner = SimpleUserSerializer(read_only=True)
+    assigned_to = SimpleUserSerializer(read_only=True)
     assigned_to_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), #we write this beacuse user id is present in User model
-        source='assigned_to', # Maps to the 'assigned_to' model field
-        write_only=True,     # Only used for writing data, not reading
-        allow_null=True,     # Allow setting assigned_to to null
-        required=False       # Not required for creating an issue
+        queryset=User.objects.all(),
+        source='assigned_to',
+        write_only=True,
+        allow_null=True,
+        required=False
+    )
+    assigned_team = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(),
+        allow_null=True,
+        required=False
     )
 
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'description', 'status', 'owner', 'assigned_to', 'assigned_to_id', 'created_at', 'updated_at']
-        read_only_fields = ['owner', 'created_at', 'updated_at'] # Owner is set automatically by the view
+        fields = ['id', 'title', 'description', 'status', 'owner', 'assigned_to', 'assigned_to_id', 'assigned_team', 'created_at', 'updated_at']
+        read_only_fields = ['owner', 'created_at', 'updated_at']
 
-    def create(self, validated_data):
-      
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-       
-        return super().update(instance, validated_data)
+    def validate(self, data):
+        if data.get('assigned_to') and data.get('assigned_team'):
+            raise serializers.ValidationError("Issue can't be assigned to both a user and a team.")
+        return data
