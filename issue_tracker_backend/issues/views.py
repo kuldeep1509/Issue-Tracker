@@ -153,7 +153,13 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # User can see only teams they are part of
-        return Team.objects.filter(members=self.request.user)
+        # This filter is correct if the creator is also added as a member.
+        return Team.objects.filter(members=self.request.user).distinct() # Added .distinct() for good measure
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        # Save the team instance first, associating it with the creator
+        team = serializer.save(created_by=self.request.user)
+        # --- CRITICAL FIX: Add the creator to the team's members ---
+        team.members.add(self.request.user)
+        # ----------------------------------------------------------
+

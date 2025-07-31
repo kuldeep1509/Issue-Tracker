@@ -11,36 +11,33 @@ import {
     CircularProgress, // Added for loading indicator
     Alert // Added for error messages
 } from '@mui/material';
-import api from '../services/api';
+import api from '../services/api'; // Your Axios instance
 
-// This component is now designed to be reusable and notify its parent
-// when a team is successfully created.
 export default function TeamForm({ onTeamCreated }) {
     const [teamName, setTeamName] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
-    const [users, setUsers] = useState([]); // State to hold all available users for selection
-    const [loadingUsers, setLoadingUsers] = useState(true); // New loading state for user fetch
-    const [loadingTeamCreate, setLoadingTeamCreate] = useState(false); // New loading state for team creation
+    const [users, setUsers] = useState([]);
+    const [loadingUsers, setLoadingUsers] = useState(true);
+    const [loadingTeamCreate, setLoadingTeamCreate] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
     // Fetch all users for the "Select Members" dropdown
     useEffect(() => {
-        setLoadingUsers(true); // Start loading
-        setError(''); // Clear previous errors
-        // This endpoint is from IssueViewSet's custom action and returns all users
-        api.get('/issues/all_users/')
+        setLoadingUsers(true);
+        setError('');
+        // Corrected: Removed leading '/api/' if baseURL is already '/api/'
+        api.get('issues/all_users/') // Path relative to baseURL, e.g., /api/issues/all_users/
             .then((res) => {
                 console.log("API response for users in TeamForm:", res.data);
                 if (Array.isArray(res.data)) {
                     setUsers(res.data);
                 } else if (res.data && Array.isArray(res.data.results)) {
-                    // Handle paginated results if your API returns them like this
                     setUsers(res.data.results);
                 } else {
                     console.warn("Unexpected data structure for users:", res.data);
                     setError("Received unexpected user data format from server.");
-                    setUsers([]); // Ensure users is an array
+                    setUsers([]);
                 }
                 setLoadingUsers(false);
             })
@@ -62,27 +59,25 @@ export default function TeamForm({ onTeamCreated }) {
             return;
         }
 
-        setLoadingTeamCreate(true); // Start loading for team creation
+        setLoadingTeamCreate(true);
         setError('');
         setSuccess('');
 
         const payload = {
             name: teamName,
-            // IMPORTANT: Changed payload key to 'member_ids' to match TeamSerializer's write_only field
             member_ids: selectedUsers.map((u) => u.id),
         };
 
         try {
-            // IMPORTANT: Now POSTing to /api/teams/ which is the the correct endpoint
-            // for TeamViewSet's create action after router registration in issues/urls.py.
-            const res = await api.post('/api/teams/', payload);
+            // Corrected: Removed leading '/api/' if baseURL is already '/api/'
+            // This will now correctly target /api/teams/
+            const res = await api.post('teams/', payload);
             console.log('Team created successfully:', res.data);
 
             setSuccess(`Team "${res.data.name}" created successfully!`);
             setTeamName('');
             setSelectedUsers([]);
 
-            // Notify the parent component (Dashboard) that a new team was created
             if (onTeamCreated) {
                 onTeamCreated(res.data);
             }
@@ -112,7 +107,7 @@ export default function TeamForm({ onTeamCreated }) {
             }
             setError(errorMessage);
         } finally {
-            setLoadingTeamCreate(false); // End loading for team creation
+            setLoadingTeamCreate(false);
         }
     };
 
@@ -151,7 +146,6 @@ export default function TeamForm({ onTeamCreated }) {
                     disabled={loadingTeamCreate}
                 />
             )}
-
 
             <Button
                 variant="contained"

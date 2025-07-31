@@ -38,7 +38,7 @@ const Dashboard = () => {
         setLoading(true);
         setError('');
         try {
-            const endpoint = user?.is_staff ? '/issues/' : '/issues/my_issues/';
+            const endpoint = user?.is_staff ? 'issues/' : 'issues/my_issues/'; // Corrected: Removed leading '/'
             const params = statusFilter !== 'ALL' ? { status: statusFilter } : {};
 
             const response = await api.get(endpoint, { params });
@@ -63,10 +63,12 @@ const Dashboard = () => {
     // New function to fetch teams
     const fetchTeams = useCallback(async () => {
         try {
-            // Reverted to '/issues/all_users/' as per the reported "Not Found" error
-            // and previous context, assuming this endpoint handles team data on your backend.
-            // For better API design, consider a dedicated '/api/teams/' endpoint.
-            const response = await api.get('/issues/all_users/'); 
+            // CORRECTED: Fetching teams from 'teams/' endpoint, which resolves to /api/teams/
+            // This aligns with the TeamViewSet you set up in your backend.
+            const response = await api.get('teams/');
+            // --- ADDED CONSOLE LOG FOR DEBUGGING ---
+            console.log("Teams fetched for dashboard:", response.data);
+            // ---------------------------------------
             if (Array.isArray(response.data)) {
                 setTeams(response.data);
             } else if (response.data && Array.isArray(response.data.results)) {
@@ -110,7 +112,8 @@ const Dashboard = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete this issue?"); // Re-added for testing, but replace with custom modal
         if (confirmDelete) {
             try {
-                await api.delete(`/issues/${issueId}/`);
+                // Corrected: Removed leading '/'
+                await api.delete(`issues/${issueId}/`);
                 fetchIssues(filterStatus);
             } catch (err) {
                 console.error('Failed to delete issue:', err.response?.data || err.message);
@@ -130,9 +133,8 @@ const Dashboard = () => {
         if (!issueToMove || issueToMove.status === newStatus) return;
 
         if (issueToMove.owner.id !== user.id && !user.is_staff) {
-            // IMPORTANT: Replaced alert with a console log. Implement a custom Material-UI Snackbar or Dialog for user feedback.
             console.log("Only admin can modify the status");
-            setError("You do not have permission to change the status of this issue."); // Provide user feedback
+            setError("You do not have permission to change the status of this issue.");
             return;
         }
 
@@ -142,11 +144,12 @@ const Dashboard = () => {
         setIssues(updatedIssues);
 
         try {
-            await api.patch(`/issues/${id}/`, { status: newStatus });
+            // Corrected: Removed leading '/'
+            await api.patch(`issues/${id}/`, { status: newStatus });
         } catch (err) {
             console.error('Failed to update issue status:', err.response?.data || err.message);
             setError('Failed to update issue status on server.');
-            fetchIssues(filterStatus); // Re-fetch to revert if update fails
+            fetchIssues(filterStatus);
         }
     }, [issues, user, fetchIssues, filterStatus]);
 
@@ -305,7 +308,7 @@ const Dashboard = () => {
                         boxShadow: 3
                     }}>
                         {/* Pass fetchTeams as a callback to refresh teams after creation */}
-                        <TeamForm onTeamCreated={fetchTeams} /> 
+                        <TeamForm onTeamCreated={fetchTeams} />
                         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                             <Button variant="outlined" onClick={() => setShowTeamForm(false)}>
                                 Close Team Form
