@@ -28,9 +28,9 @@ export default function TeamForm({ onTeamCreated }) {
     useEffect(() => {
         setLoadingUsers(true); // Start loading
         setError(''); // Clear previous errors
-        api.get('/issues/all_users/') // Using this endpoint as per your backend's current configuration
+        // This endpoint is from IssueViewSet's custom action and returns all users
+        api.get('/issues/all_users/')
             .then((res) => {
-                // Log the response to inspect its structure
                 console.log("API response for users in TeamForm:", res.data);
                 if (Array.isArray(res.data)) {
                     setUsers(res.data);
@@ -46,7 +46,6 @@ export default function TeamForm({ onTeamCreated }) {
             })
             .catch((err) => {
                 console.error('Error fetching users for team form:', err.response?.data || err.message);
-                // Display a more specific error if available
                 const errorMessage = err.response?.data?.detail || err.message || 'Unknown error';
                 setError(`Failed to load users for team selection: ${errorMessage}`);
                 setLoadingUsers(false);
@@ -69,16 +68,14 @@ export default function TeamForm({ onTeamCreated }) {
 
         const payload = {
             name: teamName,
-            // Map selected users to their IDs for the payload
-            members: selectedUsers.map((u) => u.id),
+            // IMPORTANT: Changed payload key to 'member_ids' to match TeamSerializer's write_only field
+            member_ids: selectedUsers.map((u) => u.id),
         };
 
         try {
-            // IMPORTANT: Reverted POST endpoint back to /issues/all_users/
-            // as /api/teams/ resulted in a 404. You MUST ensure your backend
-            // is configured to handle POST requests at /issues/all_users/
-            // for team creation.
-            const res = await api.post('/issues/all_users/', payload);
+            // IMPORTANT: Now POSTing to /api/teams/ which is the the correct endpoint
+            // for TeamViewSet's create action after router registration in issues/urls.py.
+            const res = await api.post('/api/teams/', payload);
             console.log('Team created successfully:', res.data);
 
             setSuccess(`Team "${res.data.name}" created successfully!`);
