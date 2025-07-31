@@ -159,9 +159,7 @@ export default function TeamForm({ onTeamCreated }) {
 
             <Divider sx={{ my: 4 }} />
 
-            <Typography variant="body2" color="textSecondary" align="center">
-                Teams will appear on the main dashboard.
-            </Typography>
+            
         </Box>
     );
 }

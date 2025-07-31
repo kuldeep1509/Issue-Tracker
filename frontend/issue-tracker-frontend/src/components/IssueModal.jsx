@@ -6,12 +6,12 @@ import {
     TextField, Button, Select, MenuItem, FormControl, InputLabel,
     CircularProgress, Box, Alert, Avatar
 } from '@mui/material';
-import EditNoteIcon from '@mui/icons-material/EditNote'; // Icon for editing/creating notes/issues
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { styled } from '@mui/system'; // Import styled
+import { styled } from '@mui/system';
 
 // --- Aqua Color Palette Definition (Consistent with other components) ---
 const aquaColors = {
@@ -37,7 +37,7 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
         borderRadius: '12px',
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
         border: `1px solid ${aquaColors.backgroundMedium}`,
-        padding: theme.spacing(2), // Overall padding inside the dialog paper
+        padding: theme.spacing(2),
     },
 }));
 
@@ -96,7 +96,7 @@ const AquaTextField = styled(TextField)(({ theme }) => ({
 }));
 
 const AquaSelectFormControl = styled(FormControl)(({ theme }) => ({
-    marginBottom: theme.spacing(3), // Consistent margin with text fields
+    marginBottom: theme.spacing(3),
 
     '& .MuiOutlinedInput-root': {
         borderRadius: '8px',
@@ -160,7 +160,7 @@ const CancelButton = styled(Button)(({ theme }) => ({
     letterSpacing: '0.7px',
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
     '&:hover': {
-        backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
+        backgroundColor: 'rgba(108, 117, 125, 0.1)',
         color: aquaColors.cancelButtonHover,
     },
     '&:disabled': {
@@ -170,13 +170,17 @@ const CancelButton = styled(Button)(({ theme }) => ({
 }));
 
 
-const IssueModal = ({ open, handleClose, issue, onSave }) => {
+const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) => {
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
+    const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const validationSchema = yup.object({
+    // Determine if the modal is opened specifically for pre-assigning to a team
+    const isPreAssignedToTeam = !!initialAssignedTeam && !issue; // Only true if creating new and team is provided
+
+    const validationSchema = yup.object().shape({
         title: yup
             .string()
             .trim()
@@ -198,7 +202,25 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
             })
             .notRequired('Assignment is optional'),
-    });
+        assigned_team_id: yup
+            .number()
+            .nullable()
+            .transform((value, originalValue) => {
+                return originalValue === 'NONE' || originalValue === '' ? null : value;
+            })
+            .notRequired('Assignment is optional'),
+    }).test(
+        'assigned-mutually-exclusive',
+        'Cannot assign issue to both a user and a team.',
+        function (values) {
+            const { assigned_to_id, assigned_team_id } = values;
+            if (assigned_to_id !== null && assigned_team_id !== null) {
+                return false;
+            }
+            return true;
+        }
+    );
+
 
     const formik = useFormik({
         initialValues: {
@@ -206,6 +228,7 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             description: '',
             status: 'OPEN',
             assigned_to_id: 'NONE',
+            assigned_team_id: 'NONE',
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
@@ -213,15 +236,19 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
             setError('');
 
             const dataToSend = { ...values };
+
             if (dataToSend.assigned_to_id === 'NONE' || dataToSend.assigned_to_id === '') {
                 dataToSend.assigned_to_id = null;
+            }
+            if (dataToSend.assigned_team_id === 'NONE' || dataToSend.assigned_team_id === '') {
+                dataToSend.assigned_team_id = null;
             }
 
             try {
                 if (issue) {
-                    await api.patch(`/issues/${issue.id}/`, dataToSend);
+                    await api.patch(`issues/${issue.id}/`, dataToSend);
                 } else {
-                    await api.post('/issues/', dataToSend);
+                    await api.post('issues/', dataToSend);
                 }
                 onSave();
                 handleCloseModal();
@@ -264,27 +291,47 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                     description: issue.description || '',
                     status: issue.status,
                     assigned_to_id: issue.assigned_to?.id ? issue.assigned_to.id : 'NONE',
+                    assigned_team_id: issue.assigned_team?.id ? issue.assigned_team.id : 'NONE',
+                }, false);
+            } else if (initialAssignedTeam) {
+                formik.setValues({
+                    title: '',
+                    description: '',
+                    status: 'OPEN',
+                    assigned_to_id: 'NONE',
+                    assigned_team_id: initialAssignedTeam.id,
                 }, false);
             } else {
                 formik.resetForm();
             }
             setError('');
         }
-    }, [issue, open]);
+    }, [issue, open, initialAssignedTeam]);
 
     const fetchUsers = useCallback(async () => {
         if (!open) return;
         try {
-            const response = await api.get('/issues/all_users/');
+            const response = await api.get('issues/all_users/');
             setUsers(response.data);
         } catch (err) {
             console.error("Failed to fetch users for assignment:", err.response?.data || err.message);
         }
     }, [open]);
 
+    const fetchTeamsForAssignment = useCallback(async () => {
+        if (!open) return;
+        try {
+            const response = await api.get('teams/');
+            setTeams(response.data);
+        } catch (err) {
+            console.error("Failed to fetch teams for assignment:", err.response?.data || err.message);
+        }
+    }, [open]);
+
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]);
+        fetchTeamsForAssignment();
+    }, [fetchUsers, fetchTeamsForAssignment]);
 
     const handleCloseModal = () => {
         formik.resetForm();
@@ -294,13 +341,28 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
 
     const canAssign = !!currentUser;
 
+    // Determine if a user or team is currently selected (not 'NONE' or null)
+    const isUserCurrentlySelected = formik.values.assigned_to_id !== 'NONE' && formik.values.assigned_to_id !== null;
+    const isTeamCurrentlySelected = formik.values.assigned_team_id !== 'NONE' && formik.values.assigned_team_id !== null;
+
+    // --- ADDED CONSOLE LOGS FOR DEBUGGING ---
+    console.log("IssueModal Render Cycle:");
+    console.log("  isPreAssignedToTeam:", isPreAssignedToTeam);
+    console.log("  formik.values.assigned_to_id:", formik.values.assigned_to_id);
+    console.log("  formik.values.assigned_team_id:", formik.values.assigned_team_id);
+    console.log("  isUserCurrentlySelected:", isUserCurrentlySelected);
+    console.log("  isTeamCurrentlySelected:", isTeamCurrentlySelected);
+    console.log("  Should show User Dropdown:", !isPreAssignedToTeam && !isTeamCurrentlySelected);
+    console.log("  Should show Team Dropdown:", !isPreAssignedToTeam && !isUserCurrentlySelected);
+    // ---------------------------------------
+
     return (
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
             <StyledDialogTitle>
                 <Avatar sx={{ m: 'auto', mb: 2, bgcolor: aquaColors.primary, width: 64, height: 64 }}>
                     <EditNoteIcon sx={{ fontSize: 36 }} />
                 </Avatar>
-                {issue ? 'Edit Issue' : 'Create New Issue'}
+                {issue ? 'Edit Issue' : (isPreAssignedToTeam ? `Assign Issue to Team: ${initialAssignedTeam.name}` : 'Create New Issue')}
             </StyledDialogTitle>
             <StyledDialogContent>
                 {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '6px' }}>{error}</Alert>}
@@ -358,35 +420,53 @@ const IssueModal = ({ open, handleClose, issue, onSave }) => {
                         )}
                     </AquaSelectFormControl>
 
+                    {/* Conditionally render assignment fields based on context */}
                     {canAssign && (
-                        <AquaSelectFormControl fullWidth
-                            error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
-                        >
-                            <InputLabel id="assigned-to-label">Assigned To</InputLabel>
-                            <Select
-                                labelId="assigned-to-label"
-                                id="assigned_to_id"
-                                name="assigned_to_id"
-                                value={formik.values.assigned_to_id}
-                                label="Assigned To"
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                displayEmpty
-                            >
-                                <MenuItem value="NONE">
-                                    <em>None</em>
-                                </MenuItem>
-                                {users.map(u => (
-                                    <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
-                                ))}
-                            </Select>
-                            {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
-                                <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
-                                    {formik.errors.assigned_to_id}
-                                </Typography>
+                        <>
+                            {/* Assigned To User dropdown:
+                                - Always shown if not pre-assigned to a team.
+                                - Hidden if a team is currently selected.
+                            */}
+                            {!isPreAssignedToTeam && !isTeamCurrentlySelected && (
+                                <AquaSelectFormControl fullWidth
+                                    error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
+                                >
+                                    <InputLabel id="assigned-to-label">Assigned To User</InputLabel>
+                                    <Select
+                                        labelId="assigned-to-label"
+                                        id="assigned_to_id"
+                                        name="assigned_to_id"
+                                        value={formik.values.assigned_to_id}
+                                        label="Assigned To User"
+                                        onChange={(e) => {
+                                            formik.handleChange(e);
+                                            // If a user is selected, clear assigned_team_id
+                                            if (e.target.value !== 'NONE') {
+                                                formik.setFieldValue('assigned_team_id', 'NONE');
+                                            }
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="NONE">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {users.map(u => (
+                                            <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
+                                        ))}
+                                    </Select>
+                                    {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
+                                        <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                            {formik.errors.assigned_to_id}
+                                        </Typography>
+                                    )}
+                                </AquaSelectFormControl>
                             )}
-                        </AquaSelectFormControl>
 
+                 
+
+                            
+                        </>
                     )}
                 </Box>
             </StyledDialogContent>
