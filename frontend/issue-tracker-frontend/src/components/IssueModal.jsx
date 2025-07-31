@@ -11,160 +11,159 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { styled } from '@mui/system';
+import { styled, useTheme } from '@mui/system'; // Import useTheme
 
-// --- Aqua Color Palette Definition (Consistent with other components) ---
-const aquaColors = {
-    primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
-    primaryLight: '#4dd0e1', // Lighter primary
-    primaryDark: '#00838f', // Darker primary for hover
-    backgroundLight: '#e0f7fa', // Very light aqua background (Material Cyan 50)
-    backgroundMedium: '#b2ebf2', // Medium aqua for subtle accents
-    textDark: '#263238', // Dark slate for primary text
-    textMuted: '#546e7a', // Muted slate for secondary text
-    borderLight: '#b2ebf2', // Light aqua border
-    borderMuted: '#80deea', // Slightly darker aqua border
-    errorRed: '#ef5350', // Standard Material-UI error red
-    cancelButton: '#6c757d', // Muted grey for cancel button
-    cancelButtonHover: '#495057', // Darker grey for cancel hover
+// --- Jira-like Color Palette Definition (Consistent with other components) ---
+const jiraColors = {
+    primaryBlue: '#0052cc', // Jira's main blue for buttons, links, focus
+    primaryBlueDark: '#0065ff', // Darker blue for hover
+    backgroundLight: '#f4f5f7', // Light grey background, similar to Jira's board
+    backgroundMedium: '#dfe1e6', // Slightly darker grey for borders/subtle elements
+    textDark: '#172b4d', // Dark text for headings and primary content
+    textMuted: '#5e6c84', // Muted grey for secondary text
+    white: '#ffffff',
+    shadow: 'rgba(0, 0, 0, 0.1)', // Subtle shadow
+    errorRed: '#de350b', // Jira's error red
+    cancelButtonText: '#5e6c84', // Muted grey for cancel button text
+    cancelButtonHoverBg: 'rgba(94, 108, 132, 0.08)', // Subtle grey hover for cancel button
+    chipBgOpen: '#e9f2ff', // Light blue for chips (used in pre-assigned team box)
 };
 
-// --- Styled Components (Re-used and adapted for Dialog) ---
+// --- Styled Components (Adapted for Jira-like Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
-        border: `1px solid ${aquaColors.backgroundMedium}`,
-        padding: theme.spacing(2),
+        backgroundColor: jiraColors.white,
+        borderRadius: '3px', // Jira-like rounded corners
+        boxShadow: `0 4px 8px ${jiraColors.shadow}`,
+        border: `1px solid ${jiraColors.backgroundMedium}`,
+        padding: theme.spacing(2), // Consistent padding
     },
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
     textAlign: 'center',
     paddingBottom: theme.spacing(1),
-    color: aquaColors.textDark,
-    fontWeight: 700,
-    fontSize: '1.75rem',
+    color: jiraColors.textDark,
+    fontWeight: 600, // Slightly less bold for titles
+    fontSize: '1.5rem', // Smaller title font size
+    borderBottom: `1px solid ${jiraColors.backgroundMedium}`, // Separator line
+    marginBottom: theme.spacing(2),
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
     padding: theme.spacing(3),
-    paddingTop: theme.spacing(1),
+    paddingTop: theme.spacing(1), // Adjust top padding after title
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
     padding: theme.spacing(2),
     paddingTop: theme.spacing(1),
-    justifyContent: 'center',
-    borderTop: `1px solid ${aquaColors.backgroundLight}`,
+    justifyContent: 'flex-end', // Align buttons to the right
+    borderTop: `1px solid ${jiraColors.backgroundMedium}`, // Separator line
     marginTop: theme.spacing(2),
+    gap: theme.spacing(1), // Space between buttons
 }));
 
-const AquaTextField = styled(TextField)(({ theme }) => ({
-    marginBottom: theme.spacing(3),
+const JiraTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(2), // Consistent vertical margin
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
+        borderRadius: '3px', // Match Jira's input field corners
         '& fieldset': {
-            borderColor: aquaColors.borderLight,
+            borderColor: jiraColors.backgroundMedium,
         },
         '&:hover fieldset': {
-            borderColor: aquaColors.borderMuted,
+            borderColor: jiraColors.textMuted,
         },
         '&.Mui-focused fieldset': {
-            borderColor: aquaColors.primary,
+            borderColor: jiraColors.primaryBlue,
             borderWidth: '2px',
         },
     },
     '& .MuiInputBase-input': {
-        padding: '16px 18px',
-        color: aquaColors.textDark,
+        padding: '12px 14px', // Standard input padding
+        color: jiraColors.textDark,
     },
     '& .MuiInputLabel-root': {
-        color: aquaColors.textMuted,
+        color: jiraColors.textMuted,
         '&.Mui-focused': {
-            color: aquaColors.primary,
+            color: jiraColors.primaryBlue,
         },
     },
     '& .MuiFormHelperText-root': {
-        color: aquaColors.errorRed,
+        color: jiraColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
     }
 }));
 
-const AquaSelectFormControl = styled(FormControl)(({ theme }) => ({
-    marginBottom: theme.spacing(3),
+const JiraSelectFormControl = styled(FormControl)(({ theme }) => ({
+    marginBottom: theme.spacing(2), // Consistent vertical margin
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
+        borderRadius: '3px', // Match Jira's input field corners
         '& fieldset': {
-            borderColor: aquaColors.borderLight,
+            borderColor: jiraColors.backgroundMedium,
         },
         '&:hover fieldset': {
-            borderColor: aquaColors.borderMuted,
+            borderColor: jiraColors.textMuted,
         },
         '&.Mui-focused fieldset': {
-            borderColor: aquaColors.primary,
+            borderColor: jiraColors.primaryBlue,
             borderWidth: '2px',
         },
     },
     '& .MuiInputBase-input': {
-        padding: '16px 18px',
-        color: aquaColors.textDark,
+        padding: '12px 14px', // Consistent input padding
+        color: jiraColors.textDark,
     },
     '& .MuiInputLabel-root': {
-        color: aquaColors.textMuted,
+        color: jiraColors.textMuted,
         '&.Mui-focused': {
-            color: aquaColors.primary,
+            color: jiraColors.primaryBlue,
         },
     },
     '& .MuiFormHelperText-root': {
-        color: aquaColors.errorRed,
+        color: jiraColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
     }
 }));
 
 
-const AquaButton = styled(Button)(({ theme }) => ({
-    backgroundColor: aquaColors.primary,
-    color: 'white',
-    borderRadius: '8px',
-    height: 56,
-    fontWeight: 700,
-    fontSize: '1.05rem',
-    letterSpacing: '0.7px',
-    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
+const JiraButton = styled(Button)(({ theme }) => ({
+    backgroundColor: jiraColors.primaryBlue,
+    color: jiraColors.white,
+    borderRadius: '3px',
+    height: 40, // Standard button height
+    fontWeight: 600, // Bolder text
+    fontSize: '0.95rem',
+    textTransform: 'none', // Jira buttons are not all caps
+    transition: 'background-color 0.2s ease-in-out',
     '&:hover': {
-        backgroundColor: aquaColors.primaryDark,
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)',
+        backgroundColor: jiraColors.primaryBlueDark,
     },
     '&:disabled': {
-        backgroundColor: aquaColors.backgroundMedium,
-        color: '#ffffff',
-        boxShadow: 'none',
-        transform: 'none',
+        backgroundColor: jiraColors.backgroundMedium,
+        color: jiraColors.textMuted,
     },
 }));
 
 const CancelButton = styled(Button)(({ theme }) => ({
-    color: aquaColors.cancelButton,
-    borderRadius: '8px',
-    height: 56,
+    color: jiraColors.cancelButtonText,
+    borderRadius: '3px',
+    height: 40,
     fontWeight: 600,
-    fontSize: '1.05rem',
-    letterSpacing: '0.7px',
+    fontSize: '0.95rem',
+    textTransform: 'none',
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
     '&:hover': {
-        backgroundColor: 'rgba(108, 117, 125, 0.1)',
-        color: aquaColors.cancelButtonHover,
+        backgroundColor: jiraColors.cancelButtonHoverBg,
+        color: jiraColors.textDark, // Darker text on hover
     },
     '&:disabled': {
-        color: aquaColors.textMuted,
+        color: jiraColors.textMuted,
         opacity: 0.6,
     },
 }));
@@ -176,6 +175,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const theme = useTheme(); // Use theme hook
 
     // Determine if the modal is opened specifically for pre-assigning to a team
     const isPreAssignedToTeam = !!initialAssignedTeam && !issue; // Only true if creating new and team is provided
@@ -245,6 +245,10 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             }
 
             try {
+                // Frontend allows any authenticated user to attempt to save changes.
+                // Backend permissions (e.g., Django REST Framework permissions)
+                // are responsible for enforcing who can actually modify an issue,
+                // including its status and assignments.
                 if (issue) {
                     await api.patch(`issues/${issue.id}/`, dataToSend);
                 } else {
@@ -285,6 +289,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
 
     useEffect(() => {
         if (open) {
+            formik.resetForm(); // Always reset form first
             if (issue) {
                 formik.setValues({
                     title: issue.title,
@@ -301,8 +306,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                     assigned_to_id: 'NONE',
                     assigned_team_id: initialAssignedTeam.id,
                 }, false);
-            } else {
-                formik.resetForm();
             }
             setError('');
         }
@@ -322,9 +325,18 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         if (!open) return;
         try {
             const response = await api.get('teams/');
-            setTeams(response.data);
+            // Corrected: Ensure response.data is an array or has a results array
+            if (Array.isArray(response.data)) {
+                setTeams(response.data);
+            } else if (response.data && Array.isArray(response.data.results)) {
+                setTeams(response.data.results);
+            } else {
+                console.warn("Unexpected API response structure for teams in IssueModal:", response.data);
+                setTeams([]); // Ensure it's always an array
+            }
         } catch (err) {
             console.error("Failed to fetch teams for assignment:", err.response?.data || err.message);
+            setTeams([]); // Ensure it's always an array on error too
         }
     }, [open]);
 
@@ -345,32 +357,22 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     const isUserCurrentlySelected = formik.values.assigned_to_id !== 'NONE' && formik.values.assigned_to_id !== null;
     const isTeamCurrentlySelected = formik.values.assigned_team_id !== 'NONE' && formik.values.assigned_team_id !== null;
 
-    // --- ADDED CONSOLE LOGS FOR DEBUGGING ---
-    console.log("IssueModal Render Cycle:");
-    console.log("  isPreAssignedToTeam:", isPreAssignedToTeam);
-    console.log("  formik.values.assigned_to_id:", formik.values.assigned_to_id);
-    console.log("  formik.values.assigned_team_id:", formik.values.assigned_team_id);
-    console.log("  isUserCurrentlySelected:", isUserCurrentlySelected);
-    console.log("  isTeamCurrentlySelected:", isTeamCurrentlySelected);
-    console.log("  Should show User Dropdown:", !isPreAssignedToTeam && !isTeamCurrentlySelected);
-    console.log("  Should show Team Dropdown:", !isPreAssignedToTeam && !isUserCurrentlySelected);
-    // ---------------------------------------
-
     return (
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
             <StyledDialogTitle>
-                <Avatar sx={{ m: 'auto', mb: 2, bgcolor: aquaColors.primary, width: 64, height: 64 }}>
-                    <EditNoteIcon sx={{ fontSize: 36 }} />
+                <Avatar sx={{ m: 'auto', mb: 2, bgcolor: jiraColors.primaryBlue, width: 48, height: 48 }}>
+                    <EditNoteIcon sx={{ fontSize: 28 }} />
                 </Avatar>
                 {issue ? 'Edit Issue' : (isPreAssignedToTeam ? `Assign Issue to Team: ${initialAssignedTeam.name}` : 'Create New Issue')}
             </StyledDialogTitle>
             <StyledDialogContent>
-                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '6px' }}>{error}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
 
                 <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-                    <AquaTextField
+                    <JiraTextField
                         autoFocus
                         label="Title"
+                        style={{marginTop: "5px"}}
                         type="text"
                         fullWidth
                         name="title"
@@ -382,7 +384,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                         required
                     />
 
-                    <AquaTextField
+                    <JiraTextField
                         label="Description"
                         type="text"
                         fullWidth
@@ -396,7 +398,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                         helperText={formik.touched.description && formik.errors.description}
                     />
 
-                    <AquaSelectFormControl fullWidth
+                    <JiraSelectFormControl fullWidth
                         error={formik.touched.status && Boolean(formik.errors.status)}
                     >
                         <InputLabel id="status-label">Status</InputLabel>
@@ -418,7 +420,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                 {formik.errors.status}
                             </Typography>
                         )}
-                    </AquaSelectFormControl>
+                    </JiraSelectFormControl>
 
                     {/* Conditionally render assignment fields based on context */}
                     {canAssign && (
@@ -428,7 +430,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                 - Hidden if a team is currently selected.
                             */}
                             {!isPreAssignedToTeam && !isTeamCurrentlySelected && (
-                                <AquaSelectFormControl fullWidth
+                                <JiraSelectFormControl fullWidth
                                     error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
                                 >
                                     <InputLabel id="assigned-to-label">Assigned To User</InputLabel>
@@ -460,12 +462,61 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                             {formik.errors.assigned_to_id}
                                         </Typography>
                                     )}
-                                </AquaSelectFormControl>
+                                </JiraSelectFormControl>
                             )}
 
-                 
+                            {/* Assigned To Team dropdown:
+                                - Always shown if not pre-assigned to a user.
+                                - Hidden if a user is currently selected.
+                                - Also hidden if pre-assigned to a team (as it's already set).
+                            */}
+                            {!isUserCurrentlySelected && !isPreAssignedToTeam && (
+                                <JiraSelectFormControl fullWidth
+                                    error={formik.touched.assigned_team_id && Boolean(formik.errors.assigned_team_id)}
+                                >
+                                    <InputLabel id="assigned-team-label">Assigned To Team</InputLabel>
+                                    <Select
+                                        labelId="assigned-team-label"
+                                        id="assigned_team_id"
+                                        name="assigned_team_id"
+                                        value={formik.values.assigned_team_id}
+                                        label="Assigned To Team"
+                                        onChange={(e) => {
+                                            formik.handleChange(e);
+                                            // If a team is selected, clear assigned_to_id
+                                            if (e.target.value !== 'NONE') {
+                                                formik.setFieldValue('assigned_to_id', 'NONE');
+                                            }
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="NONE">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {Array.isArray(teams) && teams.map(t => (
+                                            <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
+                                        ))}
+                                    </Select>
+                                    {formik.touched.assigned_team_id && formik.errors.assigned_team_id && (
+                                        <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                            {formik.errors.assigned_team_id}
+                                        </Typography>
+                                    )}
+                                </JiraSelectFormControl>
+                            )}
 
-                            
+                            {/* Display pre-assigned team if applicable */}
+                            {isPreAssignedToTeam && (
+                                <Box sx={{ mb: 2, p: 1.5, border: `1px dashed ${jiraColors.primaryBlue}`, borderRadius: '3px', backgroundColor: jiraColors.chipBgOpen }}>
+                                    <Typography variant="body2" sx={{ color: jiraColors.textDark, fontWeight: 600 }}>
+                                        Assigned to Team: {initialAssignedTeam.name}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: jiraColors.textMuted }}>
+                                        This issue will be created for this team.
+                                    </Typography>
+                                </Box>
+                            )}
                         </>
                     )}
                 </Box>
@@ -474,13 +525,13 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 <CancelButton onClick={handleCloseModal} disabled={loading}>
                     Cancel
                 </CancelButton>
-                <AquaButton
+                <JiraButton
                     onClick={formik.handleSubmit}
                     variant="contained"
                     disabled={loading || !formik.isValid || !formik.dirty}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
-                </AquaButton>
+                    {loading ? <CircularProgress size={20} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
+                </JiraButton>
             </StyledDialogActions>
         </StyledDialog>
     );

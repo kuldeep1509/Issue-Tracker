@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container, Typography, Box, Button, CircularProgress, Alert,
-    ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment
+    ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment, Badge // Import Badge for notification count
 } from '@mui/material';
-import { useTheme, styled } from '@mui/system'; // Import useTheme and styled
+import { useTheme, styled } from '@mui/system';
 import MenuIcon from '@mui/icons-material/Menu';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -12,18 +12,24 @@ import GroupIcon from '@mui/icons-material/Group';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import SettingsIcon from '@mui/icons-material/Settings';
-
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import NotificationsIcon from '@mui/icons-material/Notifications'; // Import Notifications icon
+import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
+
 import IssueCard from '../components/IssueCard';
 import IssueModal from '../components/IssueModal';
 import InviteTeamMemberModal from '../components/InviteTeamMemberModal'
 import TeamForm from './TeamForm';
+import AllIssuesList from '../components/AllIssuesList';
 import api from '../services/api';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
 import useDebounce from "../hooks/useDebounce"
 import SearchIcon from '@mui/icons-material/Search';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ItemTypes = {
     ISSUE: 'issue'
@@ -50,30 +56,38 @@ const jiraColors = {
     textMuted: '#5e6c84',
     chipBg: '#e9f2ff', // Light blue for chips
     chipText: '#0052cc',
+    deleteRed: '#ff4d4f', // A red for delete actions
 };
 
-// Styled components for Jira-like theme
-const drawerWidth = 240;
+// Define sidebar widths
+const expandedDrawerWidth = 240;
+const collapsedDrawerWidth = 60;
 
 const RootContainer = styled(Box)({
     display: 'flex',
     height: '100vh',
-    overflow: 'hidden', // Prevent main scrollbar
+    overflow: 'hidden',
     backgroundColor: jiraColors.boardBg,
 });
 
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
+const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
     backgroundColor: jiraColors.headerBg,
     color: jiraColors.headerText,
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     zIndex: (theme.zIndex && theme.zIndex.drawer !== undefined) ? theme.zIndex.drawer + 1 : 1201,
-    [theme.breakpoints.up('md')]: {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: drawerWidth,
+    width: `calc(100% - ${sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth}px)`,
+    marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
+    transition: theme.transitions ? theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    }) : 'none',
+    [theme.breakpoints.down('md')]: {
+        width: '100%',
+        marginLeft: 0,
     },
 }));
 
-const MainContent = styled(Box)(({ theme }) => ({
+const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
@@ -81,14 +95,19 @@ const MainContent = styled(Box)(({ theme }) => ({
     overflowY: 'auto',
     paddingTop: theme.spacing ? theme.spacing(10) : '80px',
     paddingBottom: theme.spacing(3),
+    marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
+    transition: theme.transitions ? theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    }) : 'none',
     [theme.breakpoints.up('md')]: {
-        marginLeft: drawerWidth,
-        paddingLeft: theme.spacing(4), // Increased padding for better visual spacing from sidebar
-        paddingRight: theme.spacing(4), // Increased padding
+        paddingLeft: theme.spacing(4),
+        paddingRight: theme.spacing(4),
     },
     [theme.breakpoints.down('md')]: {
         paddingLeft: theme.spacing(3),
         paddingRight: theme.spacing(3),
+        marginLeft: 0,
     }
 }));
 
@@ -167,7 +186,8 @@ const StyledColumnHeader = styled(Typography)({
 
 const Dashboard = () => {
     const { user, isAuthenticated, logout } = useAuth();
-    const theme = useTheme(); // Use the theme hook
+    const theme = useTheme();
+    const navigate = useNavigate();
 
     const [issues, setIssues] = useState([]);
     const [teams, setTeams] = useState([]);
@@ -181,6 +201,7 @@ const Dashboard = () => {
     const [initialAssignedTeam, setInitialAssignedTeam] = useState(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState('board');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -188,6 +209,10 @@ const Dashboard = () => {
     const [isSearchLoading, setIsSearchLoading] = useState(false);
 
     const [anchorEl, setAnchorEl] = useState(null);
+    const [notificationAnchorEl, setNotificationAnchorEl] = useState(null); // For notification menu
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
 
     const handleMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -202,14 +227,55 @@ const Dashboard = () => {
         logout();
     };
 
-    const fetchIssuesData = async (statusFilter = 'ALL', search = '') => {
+
+
+    const handleNotificationClose = () => {
+        setNotificationAnchorEl(null);
+    };
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            // Assuming an API endpoint for fetching notifications for the current user
+            // This endpoint should return a list of notification objects, e.g.,
+            // [{ id: 1, message: "You were added to Team A", read: false, created_at: "..." }]
+            const response = await api.get('/notifications/'); // Adjust endpoint as per your backend
+            if (Array.isArray(response.data)) {
+                setNotifications(response.data);
+                setUnreadCount(response.data.filter(n => !n.read).length);
+            } else if (response.data && Array.isArray(response.data.results)) {
+                setNotifications(response.data.results);
+                setUnreadCount(response.data.results.filter(n => !n.read).length);
+            } else {
+                 console.warn("Unexpected notification data structure:", response.data);
+                 setNotifications([]);
+                 setUnreadCount(0);
+            }
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err.response?.data || err.message);
+            // You might want to show a toast/alert here if fetching notifications consistently fails
+        }
+    }, []);
+
+    const markNotificationAsRead = useCallback(async (notificationId) => {
+        try {
+            // This endpoint should mark a specific notification as read in your backend
+            await api.patch(`/notifications/${notificationId}/`, { read: true }); // Adjust endpoint
+            setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+            setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
+        } catch (err) {
+            console.error('Failed to mark notification as read:', err.response?.data || err.message);
+        }
+    }, []);
+
+
+    const fetchIssuesData = async (statusFilter = 'ALL', search = '', fetchAll = false) => {
         if (!search && loading) {
              setLoading(true);
         }
         setIsSearchLoading(true);
         setError('');
         try {
-            const endpoint = user?.is_staff ? 'issues/' : 'issues/my_issues/';
+            const endpoint = (user?.is_staff || fetchAll) ? 'issues/' : 'issues/my_issues/';
             const params = {
                 ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
                 ...(search && { search })
@@ -235,7 +301,11 @@ const Dashboard = () => {
         }
     };
 
-    const fetchIssues = useCallback(fetchIssuesData, [user, loading]);
+    const fetchIssues = useCallback((statusFilter, search) => {
+        const fetchAll = viewMode === 'allIssues';
+        fetchIssuesData(statusFilter, search, fetchAll);
+    }, [user, loading, viewMode]);
+
 
     const fetchTeamsData = async () => {
         try {
@@ -256,13 +326,42 @@ const Dashboard = () => {
 
     const fetchTeams = useCallback(fetchTeamsData, []);
 
+    const handleDeleteTeam = async (teamId, teamName, teamOwnerId) => {
+        // Only allow deletion by the team owner or an admin
+         if (user?.id !== teamOwnerId || !user?.is_staff) {
+            setError("You do not have permission to delete this team. Only the team creator or an admin can delete a team.");
+            return;
+        }
+
+        const confirmDelete = window.confirm(`Are you sure you want to delete the team "${teamName}"? This action cannot be undone.`);
+        if (confirmDelete) {
+            try {
+                await api.delete(`teams/${teamId}/`);
+                fetchTeams(); // Re-fetch teams to update the list
+                setError(''); // Clear any previous error
+            } catch (err) {
+                console.error('Failed to delete team:', err.response?.data || err.message);
+                setError(`Failed to delete team: ${err.response?.data?.detail || err.message || 'Unknown error'}`);
+            }
+        }
+    };
+
 
     useEffect(() => {
         if (isAuthenticated) {
-            fetchIssues(filterStatus, debouncedSearchQuery);
+            if (viewMode === 'allIssues') {
+                fetchIssues('ALL', debouncedSearchQuery);
+            } else {
+                fetchIssues(filterStatus, debouncedSearchQuery);
+            }
             fetchTeams();
+            fetchNotifications(); // Fetch notifications on mount
+
+            // Set up polling for notifications every 30 seconds
+            const notificationPollingInterval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(notificationPollingInterval); // Clean up on unmount
         }
-    }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams]);
+    }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams, viewMode, fetchNotifications]);
 
     const handleCreateIssue = () => {
         setCurrentIssue(null);
@@ -286,7 +385,11 @@ const Dashboard = () => {
         setOpenIssueModal(false);
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
-        fetchIssues(filterStatus, debouncedSearchQuery);
+        if (viewMode === 'allIssues') {
+            fetchIssues('ALL', debouncedSearchQuery);
+        } else {
+            fetchIssues(filterStatus, debouncedSearchQuery);
+        }
     };
 
     const handleDeleteIssue = async (issueId) => {
@@ -295,7 +398,11 @@ const Dashboard = () => {
         if (confirmDelete) {
             try {
                 await api.delete(`issues/${issueId}/`);
-                fetchIssues(filterStatus, debouncedSearchQuery);
+                if (viewMode === 'allIssues') {
+                    fetchIssues('ALL', debouncedSearchQuery);
+                } else {
+                        fetchIssues(filterStatus, debouncedSearchQuery);
+                }
             } catch (err) {
                 console.error('Failed to delete issue:', err.response?.data || err.message);
                 setError('Failed to delete issue. You can only delete your own issues or be an admin.');
@@ -313,9 +420,14 @@ const Dashboard = () => {
         const issueToMove = issues.find((issue) => issue.id === id);
         if (!issueToMove || issueToMove.status === newStatus) return;
 
-        if (issueToMove.owner.id !== user.id && !user.is_staff) {
-            console.log("Only admin can modify the status");
-            setError("You do not have permission to change the status of this issue.");
+        // Check if the current user is the owner, the assigned user, or an admin
+        const isOwner = issueToMove.owner?.id === user?.id;
+        const isAssigned = issueToMove.assigned_to?.id === user?.id;
+        const isAdmin = user?.is_staff;
+
+        if (!isOwner && !isAssigned && !isAdmin) {
+            console.log("Permission denied: Only owner, assigned user, or admin can modify the status.");
+            setError("You do not have permission to change the status of this issue. Only the owner, assigned user, or an admin can do so.");
             return;
         }
 
@@ -345,7 +457,7 @@ const Dashboard = () => {
 
         const getColumnTitle = (status) => {
             switch (status) {
-                case 'OPEN': return 'TO DO';
+                case 'OPEN': return 'OPEN';
                 case 'IN_PROGRESS': return 'IN PROGRESS';
                 case 'CLOSED': return 'DONE';
                 default: return 'UNKNOWN';
@@ -354,16 +466,15 @@ const Dashboard = () => {
 
         const isActive = isOver && canDrop;
         return (
-            // Apply flex properties directly to the column box
             <StyledKanbanColumnBox
                 ref={drop}
                 isActive={isActive}
                 canDrop={canDrop}
                 sx={{
-                    flex: '1 1 300px', // flex-grow, flex-shrink, flex-basis (base width for each column)
-                    minWidth: { xs: '100%', sm: '280px', md: '300px' }, // Minimum width for responsiveness
-                    maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` }, // Max width to ensure 3 columns fit with gap
-                    boxSizing: 'border-box', // Include padding and border in width calculation
+                    flex: '1 1 300px',
+                    minWidth: { xs: '100%', sm: '280px', md: '300px' },
+                    maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` },
+                    boxSizing: 'border-box',
                 }}
             >
                 <StyledColumnHeader align="center">
@@ -395,20 +506,16 @@ const Dashboard = () => {
         );
     }
 
-    const filteredByStatus = filterStatus === 'ALL'
-        ? issues
-        : issues.filter(issue => issue.status === filterStatus);
-
-    const issuesToDisplay = filteredByStatus.filter(issue => {
-        if (!debouncedSearchQuery) {
-            return true;
-        }
-        const lowerCaseQuery = debouncedSearchQuery.toLowerCase();
-        return (
-            issue.title.toLowerCase().includes(lowerCaseQuery) ||
-            (issue.description && issue.description.toLowerCase().includes(lowerCaseQuery))
+    const issuesToDisplay = issues.filter(issue => {
+        const matchesStatus = (filterStatus === 'ALL' || issue.status === filterStatus);
+        const matchesSearch = (
+            !debouncedSearchQuery ||
+            issue.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            (issue.description && issue.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
         );
+        return matchesStatus && matchesSearch;
     });
+
 
     const issuesGroupedByStatus = ISSUE_STATUSES.reduce((acc, status) => {
         acc[status] = Array.isArray(issuesToDisplay) ? issuesToDisplay.filter(issue => issue.status === status) : [];
@@ -416,53 +523,72 @@ const Dashboard = () => {
     }, {});
 
     const drawerContent = (
-        <div>
-            <Toolbar sx={{ backgroundColor: jiraColors.sidebarBg, minHeight: '64px !important', justifyContent: 'space-between' }}>
-                <Typography variant="h6" noWrap component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
-                    Issue Tracker
-                </Typography>
+        <Box sx={{
+            width: sidebarOpen ? expandedDrawerWidth : collapsedDrawerWidth,
+            overflowX: 'hidden',
+            transition: theme.transitions ? theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+            }) : 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+        }}>
+            <Toolbar sx={{ backgroundColor: jiraColors.sidebarBg, minHeight: '64px !important', justifyContent: sidebarOpen ? 'space-between' : 'center', pr: sidebarOpen ? 2 : 0 }}>
+                {sidebarOpen && (
+                    <Typography variant="h6" noWrap component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
+                        Issue Tracker
+                    </Typography>
+                )}
                 <IconButton
                     color="inherit"
-                    aria-label="close drawer"
-                    onClick={() => setMobileOpen(false)}
-                    sx={{ display: { md: 'none' } }}
+                    aria-label={sidebarOpen ? "collapse sidebar" : "expand sidebar"}
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    sx={{
+                        color: 'white',
+                        ml: sidebarOpen ? 0 : 'auto',
+                        transition: theme.transitions ? theme.transitions.create('margin', {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.enteringScreen,
+                        }) : 'none',
+                    }}
                 >
-                    <ChevronLeftIcon />
+                    {sidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                 </IconButton>
             </Toolbar>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-            <List>
-                <ListItem button onClick={() => { setViewMode('board'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover } }}>
-                    <DashboardIcon sx={{ color: jiraColors.sidebarText, mr: 2 }} />
-                    <ListItemText primary="Board" sx={{ color: jiraColors.sidebarText }} />
+            <List sx={{ flexGrow: 1 }}>
+                <ListItem button onClick={() => { setViewMode('board'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                    <DashboardIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                    {sidebarOpen && <ListItemText primary="Board" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
-                <ListItem button onClick={() => { setViewMode('teams'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover } }}>
-                    <GroupIcon sx={{ color: jiraColors.sidebarText, mr: 2 }} />
-                    <ListItemText primary="Teams" sx={{ color: jiraColors.sidebarText }} />
+                <ListItem button onClick={() => { setViewMode('teams'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                    <GroupIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                    {sidebarOpen && <ListItemText primary="Teams" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
                 {user?.is_staff && (
-                    <ListItem button onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover } }}>
-                        <PersonAddIcon sx={{ color: jiraColors.sidebarText, mr: 2 }} />
-                        <ListItemText primary="Invite User" sx={{ color: jiraColors.sidebarText }} />
+                    <ListItem button onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                        <PersonAddIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                        {sidebarOpen && <ListItemText primary="Invite User" sx={{ color: jiraColors.sidebarText }} />}
                     </ListItem>
                 )}
-                <ListItem button sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover } }}>
-                    <BugReportIcon sx={{ color: jiraColors.sidebarText, mr: 2 }} />
-                    <ListItemText primary="All Issues" sx={{ color: jiraColors.sidebarText }} />
+                <ListItem button onClick={() => { setViewMode('allIssues'); setMobileOpen(false); setFilterStatus('ALL'); setSearchQuery(''); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                    <BugReportIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                    {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
-                <ListItem button sx={{ '&:hover': { backgroundColor: jiraColors.sidebarText, mr: 2 }} }>
-                    <SettingsIcon sx={{ color: jiraColors.sidebarText, mr: 2 }} />
-                    <ListItemText primary="Settings" sx={{ color: jiraColors.sidebarText }} />
+                <ListItem button sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                    <SettingsIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                    {sidebarOpen && <ListItemText primary="Settings" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
             </List>
-        </div>
+        </Box>
     );
 
     return (
         <DndProvider backend={HTML5Backend}>
             <RootContainer>
                 {/* App Bar */}
-                <StyledAppBar position="fixed">
+                <StyledAppBar position="fixed" sidebaropen={sidebarOpen ? 1 : 0}>
                     <Toolbar sx={{ justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <IconButton
@@ -474,28 +600,81 @@ const Dashboard = () => {
                             >
                                 <MenuIcon />
                             </IconButton>
-                            <Typography variant="h6" noWrap component="div" sx={{ color: jiraColors.headerText, fontWeight: 'bold', mr: 2 }}>
-                                My Project
-                            </Typography>
-                            {/* Placeholder for project selector */}
-                            <Select
-                                value="current"
+                            <Typography
+                                variant="h6"
+                                noWrap
+                                component={Link}
+                                to="/dashboard"
                                 sx={{
-                                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                    color: jiraColors.textDark,
+                                    color: jiraColors.headerText,
                                     fontWeight: 'bold',
-                                    '.MuiSelect-icon': { color: jiraColors.textDark },
+                                    mr: 2,
+                                    textDecoration: 'none',
+                                    '&:hover': {
+                                        color: jiraColors.primaryBlue,
+                                    },
                                 }}
                             >
-                                <MuiMenuItem value="current">Current Project</MuiMenuItem>
-                                <MuiMenuItem value="project1">Project Alpha</MuiMenuItem>
-                                <MuiMenuItem value="project2">Project Beta</MuiMenuItem>
-                            </Select>
+                                ISSUE-TRACKER
+                            </Typography>
+                            
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                           
+                            <Menu
+                                anchorEl={notificationAnchorEl}
+                                open={Boolean(notificationAnchorEl)}
+                                onClose={handleNotificationClose}
+                                PaperProps={{
+                                    sx: {
+                                        maxHeight: 300,
+                                        width: 300,
+                                        backgroundColor: jiraColors.columnBg,
+                                        borderRadius: '3px',
+                                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                                        border: `1px solid ${jiraColors.cardBorder}`,
+                                    },
+                                }}
+                            >
+                                <Typography variant="subtitle1" sx={{ p: 2, fontWeight: 'bold', color: jiraColors.headerText, borderBottom: `1px solid ${jiraColors.cardBorder}` }}>
+                                    Notifications ({unreadCount} unread)
+                                </Typography>
+                                {notifications.length === 0 ? (
+                                    <MuiMenuItem disabled>No new notifications</MuiMenuItem>
+                                ) : (
+                                    notifications.map((notification) => (
+                                        <MuiMenuItem
+                                            key={notification.id}
+                                            onClick={() => {
+                                                markNotificationAsRead(notification.id);
+                                                // Optionally navigate or show details of the notification
+                                                handleNotificationClose();
+                                            }}
+                                            sx={{
+                                                fontWeight: notification.read ? 'normal' : 'bold',
+                                                backgroundColor: notification.read ? 'inherit' : jiraColors.boardBg,
+                                                '&:hover': {
+                                                    backgroundColor: jiraColors.buttonSecondaryHover,
+                                                },
+                                                whiteSpace: 'normal', // Allow text to wrap
+                                                py: 1.5, // Add vertical padding
+                                                borderBottom: `1px solid ${jiraColors.cardBorder}`, // Separator
+                                            }}
+                                        >
+                                            <Box>
+                                                <Typography variant="body2" color={jiraColors.textDark}>
+                                                    {notification.message}
+                                                </Typography>
+                                                <Typography variant="caption" color={jiraColors.textMuted}>
+                                                    {new Date(notification.created_at).toLocaleString()}
+                                                </Typography>
+                                            </Box>
+                                        </MuiMenuItem>
+                                    ))
+                                )}
+                            </Menu>
+
                             <StyledButton variant="contained" startIcon={<AddIcon />} onClick={handleCreateIssue}>
                                 Create
                             </StyledButton>
@@ -529,8 +708,8 @@ const Dashboard = () => {
                                         open={Boolean(anchorEl)}
                                         onClose={handleCloseMenu}
                                     >
-                                        <MuiMenuItem onClick={handleCloseMenu}>Profile</MuiMenuItem>
-                                        <MuiMenuItem onClick={handleCloseMenu}>My account</MuiMenuItem>
+                                    
+                                      
                                         <MuiMenuItem onClick={handleLogout}>Logout</MuiMenuItem>
                                     </Menu>
                                 </Box>
@@ -543,16 +722,20 @@ const Dashboard = () => {
                 <Drawer
                     variant="permanent"
                     sx={{
-                        width: drawerWidth,
+                        width: sidebarOpen ? expandedDrawerWidth : collapsedDrawerWidth,
                         flexShrink: 0,
                         '& .MuiDrawer-paper': {
-                            width: drawerWidth,
+                            width: sidebarOpen ? expandedDrawerWidth : collapsedDrawerWidth,
                             boxSizing: 'border-box',
                             backgroundColor: jiraColors.sidebarBg,
                             color: jiraColors.sidebarText,
                             borderRight: 'none',
                             boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                             paddingTop: theme.spacing(8),
+                            transition: theme.transitions ? theme.transitions.create('width', {
+                                easing: theme.transitions.easing.sharp,
+                                duration: theme.transitions.duration.enteringScreen,
+                            }) : 'none',
                         },
                         display: { xs: 'none', md: 'block' },
                     }}
@@ -569,7 +752,7 @@ const Dashboard = () => {
                     ModalProps={{ keepMounted: true }}
                     sx={{
                         '& .MuiDrawer-paper': {
-                            width: drawerWidth,
+                            width: expandedDrawerWidth,
                             boxSizing: 'border-box',
                             backgroundColor: jiraColors.sidebarBg,
                             color: jiraColors.sidebarText,
@@ -583,30 +766,34 @@ const Dashboard = () => {
                     {drawerContent}
                 </Drawer>
 
-                <MainContent>
-                    {/* Display error message locally */}
+                <MainContent sidebaropen={sidebarOpen ? 1 : 0}>
                     {error && (
                         <Box sx={{ px: { xs: 3, md: 2 }, mb: 2 }}>
                             <Alert severity="error">{error}</Alert>
                         </Box>
                     )}
 
-                    {/* Main content area based on viewMode */}
                     {viewMode === 'board' && (
-                        <Box>
+                        <Box
+                            sx={{
+                                maxWidth: '1200px',
+                                margin: '0 auto',
+                                width: '100%',
+                            }}
+                        >
                             <Box sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 mb: 3,
                                 px: { xs: 0, md: 0 },
-                                 marginRight: 35
                             }}>
-                                <Typography variant="h5" component="h1" sx={{ color: jiraColors.headerText, fontWeight: 'bold'  }}>
+                                <Typography variant="h5" component="h1" sx={{ color: jiraColors.headerText, fontWeight: 'bold' }}>
                                     Board
                                 </Typography>
                                 <StyledToggleButtonGroup
                                     value={filterStatus}
+                                    style={{marginRight: "1.8%"}}
                                     exclusive
                                     onChange={handleStatusFilterChange}
                                     aria-label="issue status filter"
@@ -620,16 +807,15 @@ const Dashboard = () => {
                                 </StyledToggleButtonGroup>
                             </Box>
 
-                            {/* Search Bar wrapped in a form to prevent reload */}
-                            <Box sx={{ mb: 3, px: { xs: 0, md: 0 } ,marginRight: 35}}>
+                            <Box sx={{ mb: 3, px: { xs: 0, md: 0 } }}>
                                 <form onSubmit={(e) => e.preventDefault()}>
                                     <TextField
                                         fullWidth
                                         variant="outlined"
                                         placeholder="Search issues..."
+                                        style={{width: "99%"}}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        
                                         InputProps={{
                                             startAdornment: (
                                                 <InputAdornment position="start">
@@ -644,7 +830,6 @@ const Dashboard = () => {
                                         }}
                                         sx={{
                                             backgroundColor: jiraColors.columnBg,
-                                        
                                             borderRadius: '3px',
                                             '& .MuiOutlinedInput-root': {
                                                 '& fieldset': {
@@ -666,20 +851,14 @@ const Dashboard = () => {
                                 </form>
                             </Box>
 
-                            {/* Kanban Board (now using flexbox) */}
                             <Box
                                 sx={{
                                     display: 'flex',
-                                    
+                                    flexWrap: 'nowrap',
                                     gap: theme.spacing(2),
                                     pb: 2,
-                                    margin: '0 auto',
-                                    width: 1200,
-                                    
-                                   
-                                    position: "absolute",
-                                    marginLeft: -25,
-                                    
+                                    overflowX: 'auto',
+                                    justifyContent: 'flex-start',
                                 }}
                             >
                                 {ISSUE_STATUSES.map((status) => (
@@ -688,7 +867,6 @@ const Dashboard = () => {
                                         status={status}
                                         issues={issuesGroupedByStatus[status]}
                                         moveIssue={moveIssue}
-                                        
                                     />
                                 ))}
                             </Box>
@@ -696,7 +874,13 @@ const Dashboard = () => {
                     )}
 
                     {viewMode === 'teams' && (
-                        <Box>
+                        <Box
+                            sx={{
+                                maxWidth: '1200px',
+                                margin: '0 auto',
+                                width: '100%',
+                            }}
+                        >
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                                 <Typography variant="h5" gutterBottom sx={{ color: jiraColors.headerText, fontWeight: 'bold' }}>
                                     Your Teams
@@ -705,7 +889,6 @@ const Dashboard = () => {
                                     variant="contained"
                                     startIcon={<GroupAddIcon />}
                                     onClick={() => setShowTeamForm(!showTeamForm)}
-                                    style={{marginRight: '17%'}}
                                 >
                                     {showTeamForm ? 'Hide Form' : 'Create New Team'}
                                 </StyledButton>
@@ -721,10 +904,8 @@ const Dashboard = () => {
                                     backgroundColor: jiraColors.columnBg,
                                     borderRadius: 1,
                                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                                    marginRight: 40
-                                    
                                 }}>
-                                    <TeamForm onTeamCreated={() => { fetchTeams(); setShowTeamForm(false); }} />
+                                    <TeamForm onTeamCreated={fetchTeams} /> {/* Pass fetchTeams to refresh after creation */}
                                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                                         <StyledButton variant="outlined" onClick={() => setShowTeamForm(false)}>
                                             Close Form
@@ -738,7 +919,7 @@ const Dashboard = () => {
                                     No teams created yet. Click "Create New Team" to get started.
                                 </Typography>
                             ) : (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing(2), mt: 2 , marginRight: 22 }}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: theme.spacing(2), mt: 2 }}>
                                     {teams.map((team) => (
                                         <Box
                                             key={team.id}
@@ -762,9 +943,8 @@ const Dashboard = () => {
                                                     flexDirection: 'column',
                                                     justifyContent: 'space-between',
                                                 }}
-                                                onClick={() => handleCreateIssueForTeam(team)}
                                             >
-                                                <Box>
+                                                <Box onClick={() => handleCreateIssueForTeam(team)}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         <GroupIcon sx={{ color: jiraColors.textMuted, mr: 1 }} />
                                                         <Typography variant="subtitle1" fontWeight="bold" sx={{ color: jiraColors.textDark }}>{team.name}</Typography>
@@ -781,15 +961,56 @@ const Dashboard = () => {
                                                         ))}
                                                     </Box>
                                                 </Box>
-                                                <StyledButton size="small" variant="outlined" sx={{ mt: 2, alignSelf: 'flex-start' }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
-                                                    Assign Issue to Team
-                                                </StyledButton>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
+                                                    <StyledButton size="small" variant="outlined" sx={{ flexGrow: 1 }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
+                                                        Assign Issue
+                                                    </StyledButton>
+                                                    {/* Only show delete button if current user is owner or admin */}
+                                                    {(user?.id === team.owner?.id || user?.is_staff) && (
+                                                        <StyledButton
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color="error"
+                                                            startIcon={<DeleteIcon />}
+                                                            sx={{
+                                                                flexGrow: 1,
+                                                                borderColor: jiraColors.deleteRed,
+                                                                color: jiraColors.deleteRed,
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(255, 77, 79, 0.1)',
+                                                                    borderColor: jiraColors.deleteRed,
+                                                                },
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation(); // Prevent opening issue modal
+                                                                handleDeleteTeam(team.id, team.name, team.owner?.id);
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </StyledButton>
+                                                    )}
+                                                </Box>
                                             </Paper>
                                         </Box>
                                     ))}
                                 </Box>
                             )}
                         </Box>
+                    )}
+
+                    {viewMode === 'allIssues' && (
+                        <AllIssuesList
+                            issues={issuesToDisplay}
+                            loading={loading}
+                            error={error}
+                            onEdit={handleEditIssue}
+                            onDelete={handleDeleteIssue}
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            isSearchLoading={isSearchLoading}
+                            filterStatus={filterStatus}
+                            handleStatusFilterChange={handleStatusFilterChange}
+                        />
                     )}
                 </MainContent>
             </RootContainer>
@@ -798,7 +1019,13 @@ const Dashboard = () => {
                 open={openIssueModal}
                 handleClose={handleCloseIssueModal}
                 issue={currentIssue}
-                onSave={() => fetchIssues(filterStatus, debouncedSearchQuery)}
+                onSave={() => {
+                    if (viewMode === 'allIssues') {
+                        fetchIssues('ALL', debouncedSearchQuery);
+                    } else {
+                        fetchIssues(filterStatus, debouncedSearchQuery);
+                    }
+                }}
                 initialAssignedTeam={initialAssignedTeam}
             />
 

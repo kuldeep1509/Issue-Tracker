@@ -1,47 +1,51 @@
-// src/components/Layout.js
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { styled } from '@mui/system';
 
-// --- Aqua Color Palette Definition (Keep consistent with LoginPage) ---
-const aquaColors = {
-    primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
-    primaryLight: '#4dd0e1', // Lighter primary
-    primaryDark: '#00838f', // Darker primary for hover
-    backgroundLight: '#e0f7fa', // Very light aqua background (Material Cyan 50)
-    backgroundMedium: '#b2ebf2', // Medium aqua for subtle accents
-    textDark: '#263238', // Dark slate for primary text
-    textMuted: '#546e7a', // Muted slate for secondary text
+// --- Jira-like Color Palette Definition (Consistent with LoginPage) ---
+const jiraColors = {
+    primaryBlue: '#0052cc', // Jira's main blue for buttons, links, focus
+    primaryBlueDark: '#0065ff', // Darker blue for hover
+    backgroundLight: '#f4f5f7', // Light grey background, similar to Jira's board
+    backgroundMedium: '#dfe1e6', // Slightly darker grey for borders/subtle elements
+    textDark: '#172b4d', // Dark text for headings and primary content
+    textMuted: '#5e6c84', // Muted grey for secondary text
     white: '#ffffff',
+    shadow: 'rgba(0, 0, 0, 0.1)', // Subtle shadow
+    errorRed: '#de350b', // Jira's error red (though not used directly in this layout)
 };
 
 // --- Styled Components for Layout ---
 
 const StyledAppBar = styled(AppBar)({
-    backgroundColor: aquaColors.primary, // AppBar background matches the primary aqua
-    boxShadow: '0 4px 15px rgba(0, 188, 212, 0.25)', // Subtle shadow
+    backgroundColor: jiraColors.white, // AppBar background is white like Jira's header
+    color: jiraColors.textDark, // Text color is dark like Jira's header
+    boxShadow: `0 2px 4px ${jiraColors.shadow}`, // Subtle shadow
+    borderBottom: `1px solid ${jiraColors.backgroundMedium}`, // Light border at the bottom
 });
 
 const AppTitleLink = styled(Link)({
     textDecoration: 'none',
-    color: aquaColors.white, // White text for the title
-    fontWeight: 600,
-    letterSpacing: '0.8px',
+    color: jiraColors.textDark, // Dark text for the title
+    fontWeight: 700, // Bolder title
+    letterSpacing: '0.5px',
+    fontSize: '1.25rem', // Slightly larger font size
     '&:hover': {
-        color: aquaColors.backgroundMedium, // Subtle highlight on hover
+        color: jiraColors.primaryBlue, // Primary blue on hover
     }
 });
 
 const NavButton = styled(Button)({
-    color: aquaColors.white, // White text for nav buttons
-    fontWeight: 500,
-    borderRadius: '4px', // Slightly rounded corners
+    color: jiraColors.textDark, // Dark text for nav buttons
+    fontWeight: 600,
+    borderRadius: '3px', // Slightly rounded corners
     padding: '6px 16px',
+    textTransform: 'none', // Jira buttons are not all caps
     transition: 'background-color 0.2s ease-in-out',
     '&:hover': {
-        backgroundColor: aquaColors.primaryDark, // Darker aqua on hover
+        backgroundColor: jiraColors.backgroundMedium, // Light grey on hover
     },
     '& + &': { // Margin between buttons
         marginLeft: '8px',
@@ -49,7 +53,7 @@ const NavButton = styled(Button)({
 });
 
 const WelcomeText = styled(Typography)({
-    color: aquaColors.white, // White text for welcome message
+    color: jiraColors.textDark, // Dark text for welcome message
     fontWeight: 400,
     marginRight: '16px', // Spacing before logout button
     whiteSpace: 'nowrap', // Prevent wrapping if username is long
@@ -64,11 +68,11 @@ const WelcomeText = styled(Typography)({
 
 const MainContentBox = styled(Box)(({ theme }) => ({
     padding: theme.spacing(4), // Increased padding for the main content area
-    backgroundColor: aquaColors.backgroundLight, // Light aqua background for content area
-    minHeight: 'calc(100vh - 64px)', // Adjust minHeight to fill viewport below AppBar
+    backgroundColor: jiraColors.backgroundLight, // Light grey background for content area
+    flexGrow: 1, // Allow it to take up remaining vertical space
+    overflowY: 'auto', // Add vertical scrolling if content overflows
     [theme.breakpoints.down('sm')]: {
         padding: theme.spacing(2), // Less padding on small screens
-        minHeight: 'calc(100vh - 56px)', // AppBar is shorter on small screens
     }
 }));
 
@@ -82,7 +86,7 @@ const Layout = ({ children }) => {
     };
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh'}}> {/* Ensure the root Box takes full viewport height and is a flex container */}
             <StyledAppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
@@ -100,14 +104,7 @@ const Layout = ({ children }) => {
                             </NavButton>
                         </>
                     ) : (
-                        <>
-                            <NavButton color="inherit" component={Link} to="/login">
-                                Login
-                            </NavButton>
-                            <NavButton color="inherit" component={Link} to="/register">
-                                Register
-                            </NavButton>
-                        </>
+                        <></>
                     )}
                 </Toolbar>
             </StyledAppBar>

@@ -11,125 +11,139 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system';
 
-// --- Aqua Color Palette Definition (Consistent with other components) ---
-const aquaColors = {
-    primary: '#00bcd4', // Cyan/Aqua primary color (Material Cyan 500)
-    primaryLight: '#4dd0e1', // Lighter primary
-    primaryDark: '#00838f', // Darker primary for hover
-    backgroundLight: '#e0f7fa', // Very light aqua background (Material Cyan 50)
-    backgroundMedium: '#b2ebf2', // Medium aqua for subtle accents
-    textDark: '#263238', // Dark slate for primary text
-    textMuted: '#546e7a', // Muted slate for secondary text
-    borderLight: '#b2ebf2', // Light aqua border
-    borderMuted: '#80deea', // Slightly darker aqua border
-    errorRed: '#ef5350', // Standard Material-UI error red
-    cancelButton: '#6c757d', // Muted grey for cancel button
-    cancelButtonHover: '#495057', // Darker grey for cancel hover
+// --- Jira-like Color Palette Definition (Consistent with Dashboard) ---
+const jiraColors = {
+    sidebarBg: '#0052cc', // Jira Blue
+    sidebarText: '#deebff',
+    sidebarHover: '#0065ff',
+    headerBg: '#ffffff',
+    headerText: '#172b4d',
+    boardBg: '#f4f5f7', // Light grey for board background
+    columnBg: '#ffffff',
+    columnHeader: '#5e6c84', // Muted grey for column headers
+    cardBorder: '#dfe1e6', // Light grey for card borders
+    buttonPrimary: '#0052cc',
+    buttonPrimaryHover: '#0065ff',
+    buttonSecondary: '#e0e0e0',
+    buttonSecondaryHover: '#c0c0c0',
+    textDark: '#172b4d',
+    textMuted: '#5e6c84',
+    chipBg: '#e9f2ff', // Light blue for chips
+    chipText: '#0052cc',
+    errorRed: '#de350b', // Jira red for errors
+    cancelButton: '#5e6c84', // Muted grey for cancel button
+    cancelButtonHover: '#6b778c', // Darker grey for cancel hover
 };
 
-// --- Styled Components (Re-used and adapted for Dialog) ---
+// --- Styled Components (Adapted for Jira-like Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
-        border: `1px solid ${aquaColors.backgroundMedium}`,
+        backgroundColor: jiraColors.boardBg, // Light grey background for the modal
+        borderRadius: '3px', // Sharper corners like Jira
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Subtle shadow
+        border: `1px solid ${jiraColors.cardBorder}`, // Light border
         padding: theme.spacing(2), // Overall padding inside the dialog paper
     },
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
     textAlign: 'center',
-    paddingBottom: theme.spacing(1), // Less padding at bottom for title
-    color: aquaColors.textDark,
+    paddingBottom: theme.spacing(1),
+    color: jiraColors.headerText,
     fontWeight: 700,
-    fontSize: '1.75rem', // Larger title for prominence
+    fontSize: '1.5rem', // Slightly smaller title
+    borderBottom: `1px solid ${jiraColors.cardBorder}`, // Separator line
+    marginBottom: theme.spacing(2),
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-    padding: theme.spacing(3), // Generous padding for content
-    paddingTop: theme.spacing(1), // Adjust top padding to bring content closer to title
+    padding: theme.spacing(3),
+    paddingTop: theme.spacing(1),
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(1), // Adjust top padding to bring buttons closer
-    justifyContent: 'center', // Center the action buttons
-    borderTop: `1px solid ${aquaColors.backgroundLight}`, // Subtle separator
-    marginTop: theme.spacing(2), // Space above the actions
+    paddingTop: theme.spacing(1),
+    justifyContent: 'flex-end', // Align buttons to the right
+    borderTop: `1px solid ${jiraColors.cardBorder}`, // Subtle separator
+    marginTop: theme.spacing(2),
+    gap: theme.spacing(1), // Space between buttons
 }));
 
-const AquaTextField = styled(TextField)(({ theme }) => ({
-    marginBottom: theme.spacing(3), // Consistent vertical margin
+const JiraTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(2), // Consistent vertical margin
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
+        borderRadius: '3px', // Sharper corners
+        backgroundColor: jiraColors.columnBg, // White background for input
         '& fieldset': {
-            borderColor: aquaColors.borderLight,
+            borderColor: jiraColors.cardBorder,
         },
         '&:hover fieldset': {
-            borderColor: aquaColors.borderMuted,
+            borderColor: jiraColors.textMuted,
         },
         '&.Mui-focused fieldset': {
-            borderColor: aquaColors.primary,
-            borderWidth: '2px',
+            borderColor: jiraColors.buttonPrimary,
+            borderWidth: '1px', // Keep border thin
         },
     },
     '& .MuiInputBase-input': {
-        padding: '16px 18px', // Consistent internal padding
-        color: aquaColors.textDark,
+        padding: '10px 14px', // Smaller padding for inputs
+        color: jiraColors.textDark,
     },
     '& .MuiInputLabel-root': {
-        color: aquaColors.textMuted,
+        color: jiraColors.textMuted,
         '&.Mui-focused': {
-            color: aquaColors.primary,
+            color: jiraColors.buttonPrimary,
         },
     },
     '& .MuiFormHelperText-root': {
-        color: aquaColors.errorRed,
+        color: jiraColors.errorRed,
         marginTop: theme.spacing(0.5),
         marginBottom: 0,
     }
 }));
 
-const AquaButton = styled(Button)(({ theme }) => ({
-    backgroundColor: aquaColors.primary,
-    color: 'white',
-    borderRadius: '8px',
-    height: 56,
-    fontWeight: 700,
-    fontSize: '1.05rem',
-    letterSpacing: '0.7px',
-    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out',
-    '&:hover': {
-        backgroundColor: aquaColors.primaryDark,
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 20px rgba(0, 188, 212, 0.3)',
-    },
+const JiraButton = styled(Button)(({ theme, variant }) => ({
+    borderRadius: '3px',
+    textTransform: 'none', // No uppercase
+    fontWeight: 600,
+    padding: '8px 16px',
+    transition: 'background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+    ...(variant === 'contained' && {
+        backgroundColor: jiraColors.buttonPrimary,
+        color: 'white',
+        '&:hover': {
+            backgroundColor: jiraColors.buttonPrimaryHover,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+        },
+    }),
+    ...(variant === 'outlined' && {
+        borderColor: jiraColors.buttonSecondary,
+        color: jiraColors.headerText,
+        '&:hover': {
+            backgroundColor: jiraColors.buttonSecondaryHover,
+            borderColor: jiraColors.buttonSecondaryHover,
+        },
+    }),
     '&:disabled': {
-        backgroundColor: aquaColors.backgroundMedium,
-        color: '#ffffff',
+        backgroundColor: jiraColors.buttonSecondary,
+        color: jiraColors.textMuted,
+        opacity: 0.7,
         boxShadow: 'none',
-        transform: 'none',
     },
 }));
 
-const CancelButton = styled(Button)(({ theme }) => ({
-    color: aquaColors.cancelButton,
-    borderRadius: '8px',
-    height: 56,
-    fontWeight: 600,
-    fontSize: '1.05rem',
-    letterSpacing: '0.7px',
-    transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
+const JiraCancelButton = styled(JiraButton)(({ theme }) => ({
+    backgroundColor: 'transparent', // Transparent background
+    color: jiraColors.cancelButton,
     '&:hover': {
-        backgroundColor: 'rgba(108, 117, 125, 0.1)', // Light grey transparent hover
-        color: aquaColors.cancelButtonHover,
+        backgroundColor: jiraColors.buttonSecondaryHover, // Light grey hover
+        color: jiraColors.cancelButtonHover,
     },
     '&:disabled': {
-        color: aquaColors.textMuted,
-        opacity: 0.6,
+        color: jiraColors.textMuted,
     },
 }));
 
@@ -226,19 +240,19 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
     return (
         <StyledDialog open={open} onClose={handleCloseModal} fullWidth maxWidth="sm">
             <StyledDialogTitle>
-                <Avatar sx={{ m: 'auto', mb: 2, bgcolor: aquaColors.primary, width: 64, height: 64 }}>
-                    <PersonAddAlt1Icon sx={{ fontSize: 36 }} />
+                <Avatar sx={{ m: 'auto', mb: 2, bgcolor: jiraColors.buttonPrimary, width: 56, height: 56 }}>
+                    <PersonAddAlt1Icon sx={{ fontSize: 32, color: 'white' }} />
                 </Avatar>
                 Invite New Team Member
             </StyledDialogTitle>
             <StyledDialogContent>
-                <Typography variant="body2" color={aquaColors.textMuted} sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="body2" color={jiraColors.textMuted} sx={{ mb: 3, textAlign: 'center' }}>
                     This will create a new user account. Share the credentials securely with the invited team member.
                 </Typography>
-                {message && <Alert severity={severity} sx={{ mb: 3, borderRadius: '6px' }}>{message}</Alert>}
+                {message && <Alert severity={severity} sx={{ mb: 3, borderRadius: '3px', fontSize: '0.875rem' }}>{message}</Alert>}
 
                 <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-                    <AquaTextField
+                    <JiraTextField
                         autoFocus
                         label="Username"
                         type="text"
@@ -252,7 +266,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         helperText={formik.touched.username && formik.errors.username}
                     />
 
-                    <AquaTextField
+                    <JiraTextField
                         label="Email"
                         type="email"
                         fullWidth
@@ -265,7 +279,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         helperText={formik.touched.email && formik.errors.email}
                     />
 
-                    <AquaTextField
+                    <JiraTextField
                         label="Password"
                         type="password"
                         fullWidth
@@ -278,7 +292,7 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                         helperText={formik.touched.password && formik.errors.password}
                     />
 
-                    <AquaTextField
+                    <JiraTextField
                         label="Confirm Password"
                         type="password"
                         fullWidth
@@ -293,16 +307,16 @@ const InviteTeamMemberModal = ({ open, handleClose }) => {
                 </Box>
             </StyledDialogContent>
             <StyledDialogActions>
-                <CancelButton onClick={handleCloseModal} disabled={loading}>
+                <JiraCancelButton onClick={handleCloseModal} disabled={loading}>
                     Cancel
-                </CancelButton>
-                <AquaButton
+                </JiraCancelButton>
+                <JiraButton
                     onClick={formik.handleSubmit}
                     variant="contained"
                     disabled={loading || !formik.isValid || !formik.dirty}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
-                </AquaButton>
+                    {loading ? <CircularProgress size={20} color="inherit" /> : 'Create Account'}
+                </JiraButton>
             </StyledDialogActions>
         </StyledDialog>
     );
