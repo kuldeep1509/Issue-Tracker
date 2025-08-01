@@ -5,11 +5,6 @@ from .models import Issue, Team
 from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
 
 User = get_user_model()
-# One-time update: set is_staff=True for all users
-try:
-    User.objects.update(is_staff=True)
-except Exception:
-    pass
 
 # New: Custom UserCreateSerializer to set is_staff=True
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
@@ -21,15 +16,11 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         read_only_fields = ('is_staff',) # Make it read-only for creation, as we'll set it in create method
 
     def create(self, validated_data):
-        # Set is_staff to True for all new users
+        # Set is_staff to True for the newly registered user
         validated_data['is_staff'] = True
         user = super().create(validated_data)
         user.is_staff = True
-      
-        for u in User.objects.all():
-            if not u.is_staff:
-                u.is_staff = True
-                u.save()
+        user.save()
         return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
