@@ -1,3 +1,17 @@
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# Signal to set is_staff=True for every user after creation
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+User = get_user_model()
+
+@receiver(post_save, sender=User)
+def set_is_staff_on_create(sender, instance, created, **kwargs):
+    if created and not instance.is_staff:
+        instance.is_staff = True
+        instance.save()
 # issues/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
