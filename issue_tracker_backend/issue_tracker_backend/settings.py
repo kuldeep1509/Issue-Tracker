@@ -348,9 +348,10 @@ REST_FRAMEWORK = {
 }
 
 # Djoser settings
+#    'USER_CREATE_SERIALIZER': 'issues.serializers.CustomUserCreateSerializer',
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
-    'USER_CREATE_SERIALIZER': 'issues.serializers.CustomUserCreateSerializer',
     'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': '#/activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': False,
@@ -362,6 +363,7 @@ DJOSER = {
         'user_detail': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
+        'user_create': 'issues.serializers.CustomUserCreateSerializer',
         'current_user': 'issues.serializers.CustomCurrentUserSerializer',
     },
 }
