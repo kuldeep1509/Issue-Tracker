@@ -944,7 +944,7 @@ const Dashboard = () => {
                                                     justifyContent: 'space-between',
                                                 }}
                                             >
-                                                <Box onClick={() => handleCreateIssueForTeam(team)}>
+                                                <Box>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         <GroupIcon sx={{ color: jiraColors.textMuted, mr: 1 }} />
                                                         <Typography variant="subtitle1" fontWeight="bold" sx={{ color: jiraColors.textDark }}>{team.name}</Typography>
@@ -962,33 +962,8 @@ const Dashboard = () => {
                                                     </Box>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-                                                    <StyledButton size="small" variant="outlined" sx={{ flexGrow: 1 }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
-                                                        Assign Issue
-                                                    </StyledButton>
-                                                    {/* Only show delete button if current user is owner or admin */}
-                                                    {(user?.id === team.owner?.id || user?.is_staff) && (
-                                                        <StyledButton
-                                                            size="small"
-                                                            variant="outlined"
-                                                            color="error"
-                                                            startIcon={<DeleteIcon />}
-                                                            sx={{
-                                                                flexGrow: 1,
-                                                                borderColor: jiraColors.deleteRed,
-                                                                color: jiraColors.deleteRed,
-                                                                '&:hover': {
-                                                                    backgroundColor: 'rgba(255, 77, 79, 0.1)',
-                                                                    borderColor: jiraColors.deleteRed,
-                                                                },
-                                                            }}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation(); // Prevent opening issue modal
-                                                                handleDeleteTeam(team.id, team.name, team.owner?.id);
-                                                            }}
-                                                        >
-                                                            Delete
-                                                        </StyledButton>
-                                                    )}
+                                                   
+                                                   
                                                 </Box>
                                             </Paper>
                                         </Box>
