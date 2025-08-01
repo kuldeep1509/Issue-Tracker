@@ -14,13 +14,6 @@ User = get_user_model()
 
 
 class IssueViewSet(viewsets.ModelViewSet):
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def make_admin(self, request):
-        user = request.user
-        if not user.is_staff:
-            user.is_staff = True
-            user.save()
-        return Response({'detail': f'User {user.username} is now admin (is_staff=True).'}, status=status.HTTP_200_OK)
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
