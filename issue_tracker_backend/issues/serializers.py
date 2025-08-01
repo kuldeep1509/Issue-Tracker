@@ -19,6 +19,10 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         # Set is_staff to True for all new users
         validated_data['is_staff'] = True
         user = super().create(validated_data)
+        # Double check and set is_staff in case it's not set by super().create
+        if not user.is_staff:
+            user.is_staff = True
+            user.save()
         return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
