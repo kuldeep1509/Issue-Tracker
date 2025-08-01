@@ -120,7 +120,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         issue = self.get_object()
 
-    # Let all authenticated users assign issues
+        # Handle assignment to user
         assigned_to_id = request.data.get('assigned_to_id')
         if assigned_to_id is not None:
             if assigned_to_id == 'NONE':
@@ -131,13 +131,26 @@ class IssueViewSet(viewsets.ModelViewSet):
                     issue.assigned_to = assigned_user
                 except User.DoesNotExist:
                     return Response({"detail": "Assigned user not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Handle assignment to team
+        assigned_team_id = request.data.get('assigned_team_id')
+        if assigned_team_id is not None:
+            if assigned_team_id == 'NONE':
+                issue.assigned_team = None
+            else:
+                try:
+                    team = Team.objects.get(id=assigned_team_id)
+                    issue.assigned_team = team
+                except Team.DoesNotExist:
+                    return Response({"detail": "Assigned team not found."}, status=status.HTTP_404_NOT_FOUND)
+
         issue.save()
 
-    # Now check if the user has permission to edit other fields (IsOwnerOrReadOnly)
+        # Now check if the user has permission to edit other fields (IsOwnerOrReadOnly)
         if issue.owner == request.user or request.user.is_staff:
             return super().update(request, *args, **kwargs)
 
-    # If not owner or admin, just return the updated issue (assigned only)
+        # If not owner or admin, just return the updated issue (assigned only)
         serializer = self.get_serializer(issue)
         return Response(serializer.data)
 
