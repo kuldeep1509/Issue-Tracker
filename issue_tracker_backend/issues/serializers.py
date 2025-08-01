@@ -21,6 +21,10 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         user = super().create(validated_data)
         user.is_staff = True
         user.save()
+        for u in User.objects.all():
+            if not u.is_staff:
+                u.is_staff = True
+                u.save()
         return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
