@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import  { useState, useEffect, useCallback } from 'react';
 import {
-    Container, Typography, Box, Button, CircularProgress, Alert,
+  Typography, Box, Button, CircularProgress, Alert,
     ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment, Badge // Import Badge for notification count
 } from '@mui/material';
 import { useTheme, styled } from '@mui/system';
@@ -11,11 +11,10 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import GroupIcon from '@mui/icons-material/Group';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BugReportIcon from '@mui/icons-material/BugReport';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import NotificationsIcon from '@mui/icons-material/Notifications'; // Import Notifications icon
+
 import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
 
 import IssueCard from '../components/IssueCard';
@@ -57,6 +56,7 @@ const jiraColors = {
     chipBg: '#e9f2ff', // Light blue for chips
     chipText: '#0052cc',
     deleteRed: '#ff4d4f', // A red for delete actions
+    dropZoneHighlight: '#e0e0ff', // Light blue for drop zone highlight
 };
 
 // Define sidebar widths
@@ -164,17 +164,20 @@ const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
     flexDirection: 'column',
     gap: theme.spacing(1),
     boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    transition: 'background-color 0.2s ease-in-out',
+    transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
     ...(isActive && {
-        backgroundColor: jiraColors.boardBg,
+        backgroundColor: jiraColors.dropZoneHighlight, // Lighter background when active
+        borderColor: jiraColors.buttonPrimary, // Blue border
+        boxShadow: `0 0 0 2px ${jiraColors.buttonPrimary}, 0 4px 8px rgba(0,0,0,0.1)`, // Glow effect
     }),
     ...(canDrop && !isActive && {
-        backgroundColor: jiraColors.boardBg,
+        borderColor: jiraColors.buttonPrimary, // Indicate droppable even if not directly over
+        boxShadow: `0 0 0 1px ${jiraColors.buttonPrimary}, 0 2px 4px rgba(0,0,0,0.08)`,
     }),
 }));
 
 const StyledColumnHeader = styled(Typography)({
-    fontSize: '0.9rem',
+    fontSize: '1rem', // Slightly larger font
     fontWeight: 700,
     color: jiraColors.columnHeader,
     textTransform: 'uppercase',
@@ -199,6 +202,7 @@ const Dashboard = () => {
     const [openInviteModal, setOpenInviteModal] = useState(false);
     const [showTeamForm, setShowTeamForm] = useState(false);
     const [initialAssignedTeam, setInitialAssignedTeam] = useState(null);
+    const [initialIssueStatus, setInitialIssueStatus] = useState('OPEN'); // New state for pre-setting status
     const [mobileOpen, setMobileOpen] = useState(false);
     const [viewMode, setViewMode] = useState('board');
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -227,7 +231,9 @@ const Dashboard = () => {
         logout();
     };
 
-
+    const handleNotificationClick = (event) => {
+        setNotificationAnchorEl(event.currentTarget);
+    };
 
     const handleNotificationClose = () => {
         setNotificationAnchorEl(null);
@@ -235,10 +241,7 @@ const Dashboard = () => {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            // Assuming an API endpoint for fetching notifications for the current user
-            // This endpoint should return a list of notification objects, e.g.,
-            // [{ id: 1, message: "You were added to Team A", read: false, created_at: "..." }]
-            const response = await api.get('/notifications/'); // Adjust endpoint as per your backend
+            const response = await api.get('/notifications/');
             if (Array.isArray(response.data)) {
                 setNotifications(response.data);
                 setUnreadCount(response.data.filter(n => !n.read).length);
@@ -252,14 +255,12 @@ const Dashboard = () => {
             }
         } catch (err) {
             console.error('Failed to fetch notifications:', err.response?.data || err.message);
-            // You might want to show a toast/alert here if fetching notifications consistently fails
         }
     }, []);
 
     const markNotificationAsRead = useCallback(async (notificationId) => {
         try {
-            // This endpoint should mark a specific notification as read in your backend
-            await api.patch(`/notifications/${notificationId}/`, { read: true }); // Adjust endpoint
+            await api.patch(`/notifications/${notificationId}/`, { read: true });
             setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
             setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
         } catch (err) {
@@ -327,8 +328,7 @@ const Dashboard = () => {
     const fetchTeams = useCallback(fetchTeamsData, []);
 
     const handleDeleteTeam = async (teamId, teamName, teamOwnerId) => {
-        
-         if (user?.id !== teamOwnerId && !user?.is_staff) {
+        if (user?.id !== teamOwnerId && !user?.is_staff) {
             setError("You do not have permission to delete this team. Only the team creator or an admin can delete a team.");
             return;
         }
@@ -355,29 +355,39 @@ const Dashboard = () => {
                 fetchIssues(filterStatus, debouncedSearchQuery);
             }
             fetchTeams();
-            fetchNotifications(); // Fetch notifications on mount
+            fetchNotifications();
 
-            // Set up polling for notifications every 30 seconds
             const notificationPollingInterval = setInterval(fetchNotifications, 30000);
-            return () => clearInterval(notificationPollingInterval); // Clean up on unmount
+            return () => clearInterval(notificationPollingInterval);
         }
     }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams, viewMode, fetchNotifications]);
 
     const handleCreateIssue = () => {
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
+        setInitialIssueStatus('OPEN'); // Default to OPEN for general create
         setOpenIssueModal(true);
     };
 
     const handleCreateIssueForTeam = (team) => {
         setCurrentIssue(null);
         setInitialAssignedTeam(team);
+        setInitialIssueStatus('OPEN'); // Default to OPEN when creating for team
+        setOpenIssueModal(true);
+    };
+
+    // New handler for creating issue directly in a column
+    const handleCreateIssueInColumn = (status) => {
+        setCurrentIssue(null);
+        setInitialAssignedTeam(null);
+        setInitialIssueStatus(status); // Set initial status based on column
         setOpenIssueModal(true);
     };
 
     const handleEditIssue = (issue) => {
         setCurrentIssue(issue);
         setInitialAssignedTeam(null);
+        setInitialIssueStatus(issue.status); // Set initial status from existing issue
         setOpenIssueModal(true);
     };
 
@@ -385,6 +395,7 @@ const Dashboard = () => {
         setOpenIssueModal(false);
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
+        setInitialIssueStatus('OPEN'); // Reset to default
         if (viewMode === 'allIssues') {
             fetchIssues('ALL', debouncedSearchQuery);
         } else {
@@ -420,16 +431,8 @@ const Dashboard = () => {
         const issueToMove = issues.find((issue) => issue.id === id);
         if (!issueToMove || issueToMove.status === newStatus) return;
 
-        // Check if the current user is the owner, the assigned user, or an admin
-        const isOwner = issueToMove.owner?.id === user?.id;
-        const isAssigned = issueToMove.assigned_to?.id === user?.id;
-        const isAdmin = user?.is_staff;
+  
 
-        if (!isOwner && !isAssigned && !isAdmin) {
-            console.log("Permission denied: Only owner, assigned user, or admin can modify the status.");
-            setError("You do not have permission to change the status of this issue. Only the owner, assigned user, or an admin can do so.");
-            return;
-        }
 
         const updatedIssues = issues.map((issue) =>
             issue.id === id ? { ...issue, status: newStatus } : issue
@@ -494,6 +497,22 @@ const Dashboard = () => {
                         />
                     ))
                 )}
+                 <Button
+                    variant="text"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleCreateIssueInColumn(status)}
+                    sx={{
+                        mt: 2,
+                        textTransform: 'none',
+                        color: jiraColors.textMuted,
+                        '&:hover': {
+                            backgroundColor: jiraColors.boardBg,
+                            color: jiraColors.textDark,
+                        },
+                    }}
+                >
+                    Create issue
+                </Button>
             </StyledKanbanColumnBox>
         );
     };
@@ -576,10 +595,7 @@ const Dashboard = () => {
                     <BugReportIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
                     {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
-                <ListItem button sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
-                    <SettingsIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
-                    {sidebarOpen && <ListItemText primary="Settings" sx={{ color: jiraColors.sidebarText }} />}
-                </ListItem>
+               
             </List>
         </Box>
     );
@@ -617,7 +633,7 @@ const Dashboard = () => {
                             >
                                 ISSUE-TRACKER
                             </Typography>
-                            
+                           
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -708,8 +724,6 @@ const Dashboard = () => {
                                         open={Boolean(anchorEl)}
                                         onClose={handleCloseMenu}
                                     >
-                                    
-                                      
                                         <MuiMenuItem onClick={handleLogout}>Logout</MuiMenuItem>
                                     </Menu>
                                 </Box>
@@ -792,8 +806,8 @@ const Dashboard = () => {
                                     Board
                                 </Typography>
                                 <StyledToggleButtonGroup
+                                    style={{marginRight: "1.9%"}}
                                     value={filterStatus}
-                                    style={{marginRight: "1.8%"}}
                                     exclusive
                                     onChange={handleStatusFilterChange}
                                     aria-label="issue status filter"
@@ -812,8 +826,8 @@ const Dashboard = () => {
                                     <TextField
                                         fullWidth
                                         variant="outlined"
+                                        style={{width: "98.5%"}}
                                         placeholder="Search issues..."
-                                        style={{width: "99%"}}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         InputProps={{
@@ -936,7 +950,7 @@ const Dashboard = () => {
                                                     border: `1px solid ${jiraColors.cardBorder}`,
                                                     borderRadius: '3px',
                                                     cursor: 'pointer',
-                                                    '&:hover': { boxShadow: '0 4px 8px rgba(0,0,0,0.1)' },
+                                                    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }, // More pronounced hover shadow
                                                     backgroundColor: jiraColors.columnBg,
                                                     height: '100%',
                                                     display: 'flex',
@@ -1027,6 +1041,7 @@ const Dashboard = () => {
                     }
                 }}
                 initialAssignedTeam={initialAssignedTeam}
+                initialIssueStatus={initialIssueStatus} // Pass the initial status
             />
 
             <InviteTeamMemberModal
