@@ -1,6 +1,6 @@
-import  { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Typography, Box, Button, CircularProgress, Alert,
+    Container, Typography, Box, Button, CircularProgress, Alert,
     ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment, Badge // Import Badge for notification count
 } from '@mui/material';
 import { useTheme, styled } from '@mui/system';
@@ -11,22 +11,24 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import GroupIcon from '@mui/icons-material/Group';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BugReportIcon from '@mui/icons-material/BugReport';
-
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-
+import NotificationsIcon from '@mui/icons-material/Notifications'; // Import Notifications icon
 import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
+import StarIcon from '@mui/icons-material/Star'; // Import Star icon
 
 import IssueCard from '../components/IssueCard';
 import IssueModal from '../components/IssueModal';
-import InviteTeamMemberModal from '../components/InviteTeamMemberModal'
+import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
 import TeamForm from './TeamForm';
 import AllIssuesList from '../components/AllIssuesList';
 import api from '../services/api';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
-import useDebounce from "../hooks/useDebounce"
+import useDebounce from "../hooks/useDebounce"; // Added semicolon
 import SearchIcon from '@mui/icons-material/Search';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -57,6 +59,8 @@ const jiraColors = {
     chipText: '#0052cc',
     deleteRed: '#ff4d4f', // A red for delete actions
     dropZoneHighlight: '#e0e0ff', // Light blue for drop zone highlight
+    teamChipBg: '#dfe1e6', // Muted grey for team member chips
+    teamChipText: '#172b4d', // Dark text for team member chips
 };
 
 // Define sidebar widths
@@ -154,7 +158,9 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     },
 });
 
-const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
+const StyledKanbanColumnBox = styled(Box, {
+    shouldForwardProp: (prop) => prop !== '$isActive' && prop !== '$canDrop',
+})(({ theme, $isActive, $canDrop }) => ({
     backgroundColor: jiraColors.columnBg,
     border: `1px solid ${jiraColors.cardBorder}`,
     borderRadius: '3px',
@@ -165,12 +171,12 @@ const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
     gap: theme.spacing(1),
     boxShadow: '0 1px 2px rgba(5, 5, 5, 0.05)',
     transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-    ...(isActive && {
+    ...($isActive && {
         backgroundColor: jiraColors.dropZoneHighlight, // Lighter background when active
         borderColor: jiraColors.buttonPrimary, // Blue border
         boxShadow: `0 0 0 2px ${jiraColors.buttonPrimary}, 0 4px 8px rgba(0,0,0,0.1)`, // Glow effect
     }),
-    ...(canDrop && !isActive && {
+    ...($canDrop && !$isActive && {
         borderColor: jiraColors.buttonPrimary, // Indicate droppable even if not directly over
         boxShadow: `0 0 0 1px ${jiraColors.buttonPrimary}, 0 2px 4px rgba(0,0,0,0.08)`,
     }),
@@ -231,6 +237,7 @@ const Dashboard = () => {
         logout();
     };
 
+
     const handleNotificationClick = (event) => {
         setNotificationAnchorEl(event.currentTarget);
     };
@@ -241,7 +248,10 @@ const Dashboard = () => {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const response = await api.get('/notifications/');
+            // Assuming an API endpoint for fetching notifications for the current user
+            // This endpoint should return a list of notification objects, e.g.,
+            // [{ id: 1, message: "You were added to Team A", read: false, created_at: "..." }]
+            const response = await api.get('/notifications/'); // Adjust endpoint as per your backend
             if (Array.isArray(response.data)) {
                 setNotifications(response.data);
                 setUnreadCount(response.data.filter(n => !n.read).length);
@@ -255,12 +265,14 @@ const Dashboard = () => {
             }
         } catch (err) {
             console.error('Failed to fetch notifications:', err.response?.data || err.message);
+            // You might want to show a toast/alert here if fetching notifications consistently fails
         }
     }, []);
 
     const markNotificationAsRead = useCallback(async (notificationId) => {
         try {
-            await api.patch(`/notifications/${notificationId}/`, { read: true });
+            // This endpoint should mark a specific notification as read in your backend
+            await api.patch(`/notifications/${notificationId}/`, { read: true }); // Adjust endpoint
             setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
             setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
         } catch (err) {
@@ -276,13 +288,24 @@ const Dashboard = () => {
         setIsSearchLoading(true);
         setError('');
         try {
-            const endpoint = (user?.is_staff || fetchAll) ? 'issues/' : 'issues/my_issues/';
             const params = {
                 ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
                 ...(search && { search })
             };
 
-            const response = await api.get(endpoint, { params });
+            // If not staff and viewing the board, explicitly request issues assigned to the user OR their teams
+            if (!user?.is_staff && viewMode === 'board') {
+                params.assigned_to_id = user?.id; // Issues directly assigned to the user
+                const userTeamIds = teams.filter(team =>
+                    team.members.some(member => member.id === user?.id)
+                ).map(team => team.id);
+                if (userTeamIds.length > 0) {
+                    // Pass team IDs as a comma-separated string for the backend to interpret
+                    params.assigned_team_ids = userTeamIds.join(',');
+                }
+            }
+
+            const response = await api.get('issues/', { params });
 
             if (response.data && Array.isArray(response.data.results)) {
                 setIssues(response.data.results);
@@ -305,7 +328,7 @@ const Dashboard = () => {
     const fetchIssues = useCallback((statusFilter, search) => {
         const fetchAll = viewMode === 'allIssues';
         fetchIssuesData(statusFilter, search, fetchAll);
-    }, [user, loading, viewMode]);
+    }, [user, loading, viewMode, teams]);
 
 
     const fetchTeamsData = async () => {
@@ -349,45 +372,46 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            if (viewMode === 'allIssues') {
-                fetchIssues('ALL', debouncedSearchQuery);
-            } else {
-                fetchIssues(filterStatus, debouncedSearchQuery);
-            }
-            fetchTeams();
-            fetchNotifications();
+            fetchTeams().then(() => {
+                if (viewMode === 'allIssues') {
+                    fetchIssues('ALL', debouncedSearchQuery);
+                } else {
+                    fetchIssues(filterStatus, debouncedSearchQuery);
+                }
+            });
+            fetchNotifications(); // Fetch notifications on mount
 
+            // Set up polling for notifications every 30 seconds
             const notificationPollingInterval = setInterval(fetchNotifications, 30000);
-            return () => clearInterval(notificationPollingInterval);
+            return () => clearInterval(notificationPollingInterval); // Clean up on unmount
         }
     }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams, viewMode, fetchNotifications]);
 
     const handleCreateIssue = () => {
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
-        setInitialIssueStatus('OPEN'); // Default to OPEN for general create
+        setInitialIssueStatus('OPEN');
         setOpenIssueModal(true);
     };
 
     const handleCreateIssueForTeam = (team) => {
         setCurrentIssue(null);
         setInitialAssignedTeam(team);
-        setInitialIssueStatus('OPEN'); // Default to OPEN when creating for team
+        setInitialIssueStatus('OPEN');
         setOpenIssueModal(true);
     };
 
-    // New handler for creating issue directly in a column
     const handleCreateIssueInColumn = (status) => {
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
-        setInitialIssueStatus(status); // Set initial status based on column
+        setInitialIssueStatus(status);
         setOpenIssueModal(true);
     };
 
     const handleEditIssue = (issue) => {
         setCurrentIssue(issue);
         setInitialAssignedTeam(null);
-        setInitialIssueStatus(issue.status); // Set initial status from existing issue
+        setInitialIssueStatus(issue.status);
         setOpenIssueModal(true);
     };
 
@@ -395,7 +419,7 @@ const Dashboard = () => {
         setOpenIssueModal(false);
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
-        setInitialIssueStatus('OPEN'); // Reset to default
+        setInitialIssueStatus('OPEN');
         if (viewMode === 'allIssues') {
             fetchIssues('ALL', debouncedSearchQuery);
         } else {
@@ -431,8 +455,18 @@ const Dashboard = () => {
         const issueToMove = issues.find((issue) => issue.id === id);
         if (!issueToMove || issueToMove.status === newStatus) return;
 
-  
+        // Check if the current user is the owner, the assigned user, an admin,
+        // or a member of the assigned team.
+        const isOwner = issueToMove.owner?.id === user?.id;
+        const isAssignedToUser = issueToMove.assigned_to?.id === user?.id;
+        const isAdmin = user?.is_staff;
+        const isTeamMember = issueToMove.assigned_team?.members?.some(member => member.id === user?.id);
 
+        if (!isOwner && !isAssignedToUser && !isAdmin && !isTeamMember) {
+            console.log("Permission denied: Only owner, assigned user, assigned team member, or admin can modify the status.");
+            setError("You do not have permission to change the status of this issue. Only the owner, assigned user, an assigned team member, or an admin can do so.");
+            return;
+        }
 
         const updatedIssues = issues.map((issue) =>
             issue.id === id ? { ...issue, status: newStatus } : issue
@@ -460,7 +494,7 @@ const Dashboard = () => {
 
         const getColumnTitle = (status) => {
             switch (status) {
-                case 'OPEN': return 'OPEN';
+                case 'OPEN': return 'TO DO';
                 case 'IN_PROGRESS': return 'IN PROGRESS';
                 case 'CLOSED': return 'DONE';
                 default: return 'UNKNOWN';
@@ -471,8 +505,8 @@ const Dashboard = () => {
         return (
             <StyledKanbanColumnBox
                 ref={drop}
-                isActive={isActive}
-                canDrop={canDrop}
+                $isActive={isActive}
+                $canDrop={canDrop}
                 sx={{
                     flex: '1 1 300px',
                     minWidth: { xs: '100%', sm: '280px', md: '300px' },
@@ -577,25 +611,72 @@ const Dashboard = () => {
             </Toolbar>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
             <List sx={{ flexGrow: 1 }}>
-                <ListItem button onClick={() => { setViewMode('board'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                <ListItem
+                    button
+                    component="button" // Added component="button"
+                    onClick={() => { setViewMode('board'); setMobileOpen(false); }}
+                    sx={{
+                        backgroundColor: viewMode === 'board' ? jiraColors.sidebarHover : 'transparent',
+                        '&:hover': { backgroundColor: jiraColors.sidebarHover },
+                        justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                    }}
+                >
                     <DashboardIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
                     {sidebarOpen && <ListItemText primary="Board" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
-                <ListItem button onClick={() => { setViewMode('teams'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                <ListItem
+                    button
+                    component="button" // Added component="button"
+                    onClick={() => { setViewMode('teams'); setMobileOpen(false); }}
+                    sx={{
+                        backgroundColor: viewMode === 'teams' ? jiraColors.sidebarHover : 'transparent',
+                        '&:hover': { backgroundColor: jiraColors.sidebarHover },
+                        justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                    }}
+                >
                     <GroupIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
                     {sidebarOpen && <ListItemText primary="Teams" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
                 {user?.is_staff && (
-                    <ListItem button onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                    <ListItem
+                        button
+                        component="button" // Added component="button"
+                        onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }}
+                        sx={{
+                            backgroundColor: openInviteModal ? jiraColors.sidebarHover : 'transparent',
+                            '&:hover': { backgroundColor: jiraColors.sidebarHover },
+                            justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                        }}
+                    >
                         <PersonAddIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
                         {sidebarOpen && <ListItemText primary="Invite User" sx={{ color: jiraColors.sidebarText }} />}
                     </ListItem>
                 )}
-                <ListItem button onClick={() => { setViewMode('allIssues'); setMobileOpen(false); setFilterStatus('ALL'); setSearchQuery(''); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
+                <ListItem
+                    button
+                    component="button" // Added component="button"
+                    onClick={() => { setViewMode('allIssues'); setMobileOpen(false); setFilterStatus('ALL'); setSearchQuery(''); }}
+                    sx={{
+                        backgroundColor: viewMode === 'allIssues' ? jiraColors.sidebarHover : 'transparent',
+                        '&:hover': { backgroundColor: jiraColors.sidebarHover },
+                        justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                    }}
+                >
                     <BugReportIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
                     {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: jiraColors.sidebarText }} />}
                 </ListItem>
-               
+                <ListItem
+                    button
+                    component="button" // Added component="button"
+                    sx={{
+                        backgroundColor: viewMode === 'settings' ? jiraColors.sidebarHover : 'transparent',
+                        '&:hover': { backgroundColor: jiraColors.sidebarHover },
+                        justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                    }}
+                >
+                    <SettingsIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
+                    {sidebarOpen && <ListItemText primary="Settings" sx={{ color: jiraColors.sidebarText }} />}
+                </ListItem>
             </List>
         </Box>
     );
@@ -633,11 +714,37 @@ const Dashboard = () => {
                             >
                                 ISSUE-TRACKER
                             </Typography>
-                           
+                            <Select
+                                value="current"
+                                sx={{
+                                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': { borderBottom: `1px solid ${jiraColors.primaryBlue}` },
+                                    color: jiraColors.textDark,
+                                    fontWeight: 'bold',
+                                    '.MuiSelect-icon': { color: jiraColors.textDark },
+                                    minWidth: 120,
+                                }}
+                                IconComponent={() => null}
+                            >
+                                <MuiMenuItem value="current">Current Project</MuiMenuItem>
+                                <MuiMenuItem value="project1">Project Alpha</MuiMenuItem>
+                                <MuiMenuItem value="project2">Project Beta</MuiMenuItem>
+                            </Select>
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                           
+                            <IconButton
+                                size="large"
+                                aria-label="show notifications"
+                                color="inherit"
+                                onClick={handleNotificationClick}
+                                sx={{ color: jiraColors.headerText }}
+                            >
+                                <Badge badgeContent={unreadCount} color="error">
+                                    <NotificationsIcon />
+                                </Badge>
+                            </IconButton>
                             <Menu
                                 anchorEl={notificationAnchorEl}
                                 open={Boolean(notificationAnchorEl)}
@@ -724,6 +831,8 @@ const Dashboard = () => {
                                         open={Boolean(anchorEl)}
                                         onClose={handleCloseMenu}
                                     >
+                                        <MuiMenuItem onClick={handleCloseMenu}>Profile</MuiMenuItem>
+                                        <MuiMenuItem onClick={handleCloseMenu}>My account</MuiMenuItem>
                                         <MuiMenuItem onClick={handleLogout}>Logout</MuiMenuItem>
                                     </Menu>
                                 </Box>
@@ -806,7 +915,6 @@ const Dashboard = () => {
                                     Board
                                 </Typography>
                                 <StyledToggleButtonGroup
-                                    style={{marginRight: "1.9%"}}
                                     value={filterStatus}
                                     exclusive
                                     onChange={handleStatusFilterChange}
@@ -826,7 +934,6 @@ const Dashboard = () => {
                                     <TextField
                                         fullWidth
                                         variant="outlined"
-                                        style={{width: "98.5%"}}
                                         placeholder="Search issues..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -919,7 +1026,7 @@ const Dashboard = () => {
                                     borderRadius: 1,
                                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                                 }}>
-                                    <TeamForm onTeamCreated={fetchTeams} /> {/* Pass fetchTeams to refresh after creation */}
+                                    <TeamForm onTeamCreated={fetchTeams} />
                                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                                         <StyledButton variant="outlined" onClick={() => setShowTeamForm(false)}>
                                             Close Form
@@ -946,11 +1053,11 @@ const Dashboard = () => {
                                         >
                                             <Paper
                                                 sx={{
-                                                    p: 2,
+                                                    p: 3,
                                                     border: `1px solid ${jiraColors.cardBorder}`,
                                                     borderRadius: '3px',
                                                     cursor: 'pointer',
-                                                    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }, // More pronounced hover shadow
+                                                    '&:hover': { boxShadow: '0 8px 16px rgba(0,0,0,0.1)' },
                                                     backgroundColor: jiraColors.columnBg,
                                                     height: '100%',
                                                     display: 'flex',
@@ -961,7 +1068,15 @@ const Dashboard = () => {
                                                 <Box onClick={() => handleCreateIssueForTeam(team)}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         <GroupIcon sx={{ color: jiraColors.textMuted, mr: 1 }} />
-                                                        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: jiraColors.textDark }}>{team.name}</Typography>
+                                                        <Typography variant="h6" fontWeight="bold" sx={{ color: jiraColors.textDark }}>{team.name}</Typography>
+                                                        {team.owner?.id === user?.id && (
+                                                            <Chip
+                                                                label="Owner"
+                                                                size="small"
+                                                                icon={<StarIcon sx={{ fontSize: 14 }} />}
+                                                                sx={{ ml: 1, backgroundColor: jiraColors.chipBg, color: jiraColors.chipText, fontWeight: 600 }}
+                                                            />
+                                                        )}
                                                     </Box>
                                                     <Typography variant="body2" color="text.secondary" mt={1}>Members:</Typography>
                                                     <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -970,33 +1085,30 @@ const Dashboard = () => {
                                                                 key={member.id || member}
                                                                 label={typeof member === 'object' ? member.username : member}
                                                                 size="small"
-                                                                sx={{ backgroundColor: jiraColors.chipBg, color: jiraColors.chipText, fontWeight: 600 }}
+                                                                sx={{ backgroundColor: jiraColors.teamChipBg, color: jiraColors.teamChipText, fontWeight: 600 }}
                                                             />
                                                         ))}
                                                     </Box>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-                                                    <StyledButton size="small" variant="outlined" sx={{ flexGrow: 1 }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
+                                                    <StyledButton size="small" variant="text" sx={{ flexGrow: 1, color: jiraColors.primaryBlue }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
                                                         Assign Issue
                                                     </StyledButton>
-                                                    {/* Only show delete button if current user is owner or admin */}
                                                     {(user?.id === team.owner?.id || user?.is_staff) && (
                                                         <StyledButton
                                                             size="small"
-                                                            variant="outlined"
+                                                            variant="text"
                                                             color="error"
                                                             startIcon={<DeleteIcon />}
                                                             sx={{
                                                                 flexGrow: 1,
-                                                                borderColor: jiraColors.deleteRed,
                                                                 color: jiraColors.deleteRed,
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(255, 77, 79, 0.1)',
-                                                                    borderColor: jiraColors.deleteRed,
                                                                 },
                                                             }}
                                                             onClick={(e) => {
-                                                                e.stopPropagation(); // Prevent opening issue modal
+                                                                e.stopPropagation();
                                                                 handleDeleteTeam(team.id, team.name, team.owner?.id);
                                                             }}
                                                         >
@@ -1041,7 +1153,7 @@ const Dashboard = () => {
                     }
                 }}
                 initialAssignedTeam={initialAssignedTeam}
-                initialIssueStatus={initialIssueStatus} // Pass the initial status
+                initialIssueStatus={initialIssueStatus}
             />
 
             <InviteTeamMemberModal

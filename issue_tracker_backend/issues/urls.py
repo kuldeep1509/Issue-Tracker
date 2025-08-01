@@ -9,5 +9,5 @@ router.register(r'teams', TeamViewSet)
 
 urlpatterns = [
     path('', include(router.urls)), # Includes all routes from IssueViewSet,
-     path('my_issues/', IssueViewSet.as_view({'get': 'my_issues'}), name='my-issues')
+    path('my_issues/', IssueViewSet.as_view({'get': 'my_issues'}), name='my-issues')
 ]

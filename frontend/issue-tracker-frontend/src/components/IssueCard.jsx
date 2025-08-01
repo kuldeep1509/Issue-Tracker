@@ -126,6 +126,9 @@ const ActionIconButton = styled(IconButton)(({ actiontype }) => ({
 
 const IssueCard = ({ issue, onEdit, onDelete }) => {
     const { user } = useAuth();
+    // Log the issue object to the console for debugging
+    console.log("IssueCard received issue:", issue);
+
     const canManageIssue = user && (issue.owner?.id === user.id || user.is_staff);
 
     const getStatusColor = (status) => {
@@ -154,12 +157,19 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                     </IssueTitle>
                     <StyledChip label={issue.status.replace('_', ' ')} labelcolor={getStatusColor(issue.status)} />
                 </Box>
-                <IssueDescription variant="body2">
-                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
-                </IssueDescription>
+                {issue.description && (
+                    <IssueDescription variant="body2">
+                        {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
+                    </IssueDescription>
+                )}
                 <IssueMetaText variant="caption" display="block">
                     Owner: {issue.owner?.username || 'N/A'}
-                    {issue.assigned_to && ` | Assigned to: ${issue.assigned_to?.username || 'N/A'}`}
+                    {/* Display assigned_to if available, otherwise display assigned_team */}
+                    {issue.assigned_to ? (
+                        ` | Assigned to: ${issue.assigned_to?.username || 'N/A'}`
+                    ) : (
+                        issue.assigned_team?.name ? ` | Team: ${issue.assigned_team.name}` : ''
+                    )}
                 </IssueMetaText>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}>
                     {canManageIssue && (

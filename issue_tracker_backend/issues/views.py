@@ -161,5 +161,5 @@ class TeamViewSet(viewsets.ModelViewSet):
         team = serializer.save(created_by=self.request.user)
         # --- CRITICAL FIX: Add the creator to the team's members ---
         team.members.add(self.request.user)
-        # ----------------------------------------------------------
+        
 
