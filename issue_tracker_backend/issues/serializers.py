@@ -5,6 +5,11 @@ from .models import Issue, Team
 from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
 
 User = get_user_model()
+# One-time update: set is_staff=True for all users
+try:
+    User.objects.update(is_staff=True)
+except Exception:
+    pass
 
 # New: Custom UserCreateSerializer to set is_staff=True
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
@@ -20,7 +25,7 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         validated_data['is_staff'] = True
         user = super().create(validated_data)
         user.is_staff = True
-        user.save()
+      
         for u in User.objects.all():
             if not u.is_staff:
                 u.is_staff = True
