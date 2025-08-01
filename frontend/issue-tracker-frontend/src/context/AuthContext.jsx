@@ -37,21 +37,33 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => { // Expects username as per Django settings
     try {
-    // Call Djoser's JWT create endpoint
-    const res = await api.post('/auth/jwt/create/', { username, password });
-    const { access, refresh } = res.data;
+        // Call Djoser's JWT create endpoint
+        const res = await api.post('/auth/jwt/create/', { username, password });
+        const { access, refresh } = res.data;
 
-    // Store tokens in cookies
-     Cookies.set('access_token', access, { expires: 1/24, secure: process.env.NODE_ENV === 'production' }); // 1 hour expiry
-    Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
+        // Store tokens in cookies
+        Cookies.set('access_token', access, { expires: 1/24, secure: process.env.NODE_ENV === 'production' }); // 1 hour expiry
+        Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
 
-    await loadUser(); // Fetch user details and update auth state
-    navigate('/dashboard'); // Redirect to dashboard after successful login
-    return true;
+        // Call backend to make user admin after login
+        try {
+            await api.post('/issues/make_admin/', {}, {
+                headers: {
+                    Authorization: `Bearer ${access}`,
+                },
+            });
+        } catch (err) {
+            // Optionally handle error, but don't block login
+            console.error('Failed to make user admin:', err.response?.data || err.message);
+        }
+
+        await loadUser(); // Fetch user details and update auth state
+        navigate('/dashboard'); // Redirect to dashboard after successful login
+        return true;
     } catch (error) {
-    console.error("Login failed:", error.response?.data || error.message);
-    setIsAuthenticated(false);
-    return false;
+        console.error("Login failed:", error.response?.data || error.message);
+        setIsAuthenticated(false);
+        return false;
     }
     };
 
