@@ -1,14 +1,6 @@
 # issues/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.apps import apps
-
-# Set is_staff=True for all users at startup
-UserModel = apps.get_model('auth', 'User')
-for user in UserModel.objects.all():
-    if not user.is_staff:
-        user.is_staff = True
-        user.save()
 from .models import Issue, Team
 from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
 
@@ -27,11 +19,8 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         # Set is_staff to True for all new users
         validated_data['is_staff'] = True
         user = super().create(validated_data)
-        # Double check and set is_staff in case it's not set by super().create
-        if not user.is_staff:
-            user.is_staff = True
-            user.save()
-        print(f"DEBUG: Created user {user.username} with is_staff={user.is_staff}")
+        user.is_staff = True
+        user.save()
         return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
