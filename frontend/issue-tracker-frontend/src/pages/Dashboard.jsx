@@ -242,20 +242,22 @@ const Dashboard = () => {
     
 
 
-    const fetchIssuesData = async (statusFilter = 'ALL', search = '', fetchAll = false) => {
+    const fetchIssuesData = async (statusFilter = 'ALL', search = '') => {
         if (!search && loading) {
              setLoading(true);
         }
         setIsSearchLoading(true);
         setError('');
         try {
-            const endpoint = (user?.is_staff || fetchAll) ? 'issues/' : 'issues/my_issues/';
             const params = {
                 ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
                 ...(search && { search })
             };
 
-            const response = await api.get(endpoint, { params });
+            // FIX: Removed the explicit client-side filtering for non-staff users.
+            // The backend's IssueViewSet.get_queryset already handles filtering
+            // based on the authenticated user (owner, assigned_to, or assigned_team).
+            const response = await api.get('issues/', { params }); // Simply request issues
 
             if (response.data && Array.isArray(response.data.results)) {
                 setIssues(response.data.results);
@@ -367,7 +369,7 @@ const Dashboard = () => {
         setOpenIssueModal(false);
         setCurrentIssue(null);
         setInitialAssignedTeam(null);
-        setInitialIssueStatus('OPEN'); // Reset to default
+        setInitialIssueStatus('OPEN');
         if (viewMode === 'allIssues') {
             fetchIssues('ALL', debouncedSearchQuery);
         } else {
@@ -880,7 +882,7 @@ const Dashboard = () => {
                                                     justifyContent: 'space-between',
                                                 }}
                                             >
-                                                <Box onClick={() => handleCreateIssueForTeam(team)}>
+                                                <Box>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         <GroupIcon sx={{ color: jiraColors.textMuted, mr: 1 }} />
                                                         <Typography variant="subtitle1" fontWeight="bold" sx={{ color: jiraColors.textDark }}>{team.name}</Typography>
@@ -898,9 +900,7 @@ const Dashboard = () => {
                                                     </Box>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-                                                    <StyledButton size="small" variant="outlined" sx={{ flexGrow: 1 }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
-                                                        Assign Issue
-                                                    </StyledButton>
+                                                  
                                                     {/* Only show delete button if current user is owner or admin */}
                                                     {(user?.id === team.owner?.id || user?.is_staff) && (
                                                         <StyledButton

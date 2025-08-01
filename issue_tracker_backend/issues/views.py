@@ -159,7 +159,8 @@ class TeamViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Save the team instance first, associating it with the creator
         team = serializer.save(created_by=self.request.user)
-        # --- CRITICAL FIX: Add the creator to the team's members ---
-        team.members.add(self.request.user)
-        # ----------------------------------------------------------
+        # Ensure the creator is always a member
+        if self.request.user not in team.members.all():
+            team.members.add(self.request.user)
+        team.save()
 
