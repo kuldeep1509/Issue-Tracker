@@ -163,7 +163,7 @@ const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing(1),
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+    boxShadow: '0 1px 2px rgba(5, 5, 5, 0.05)',
     transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
     ...(isActive && {
         backgroundColor: jiraColors.dropZoneHighlight, // Lighter background when active
