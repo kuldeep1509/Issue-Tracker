@@ -2,9 +2,24 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Issue, Team
-from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
 
 User = get_user_model()
+
+# New: Custom UserCreateSerializer to set is_staff=True
+class CustomUserCreateSerializer(DjoserUserCreateSerializer):
+    class Meta(DjoserUserCreateSerializer.Meta):
+        model = User
+        # Include 'is_staff' in fields to ensure it's handled,
+        # but make it read_only as we're setting it programmatically.
+        fields = ('id', 'username', 'email', 'password', 'is_staff')
+        read_only_fields = ('is_staff',) # Make it read-only for creation, as we'll set it in create method
+
+    def create(self, validated_data):
+        # Set is_staff to True for all new users
+        validated_data['is_staff'] = True
+        user = super().create(validated_data)
+        return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
