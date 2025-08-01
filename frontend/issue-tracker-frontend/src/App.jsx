@@ -38,7 +38,7 @@ function App() {
                     
 
                         {/* Catch-all route: Redirects unauthenticated users to login or shows 404 */}
-                        {/* This route should ideally be last */}
+                       
                         <Route path="*" element={<LoginPage />} />
                     </Routes>
                
