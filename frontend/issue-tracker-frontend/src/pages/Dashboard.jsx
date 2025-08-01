@@ -213,9 +213,7 @@ const Dashboard = () => {
     const [isSearchLoading, setIsSearchLoading] = useState(false);
 
     const [anchorEl, setAnchorEl] = useState(null);
-    const [notificationAnchorEl, setNotificationAnchorEl] = useState(null); // For notification menu
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+
 
 
     const handleMenu = (event) => {
@@ -239,34 +237,9 @@ const Dashboard = () => {
         setNotificationAnchorEl(null);
     };
 
-    const fetchNotifications = useCallback(async () => {
-        try {
-            const response = await api.get('/notifications/');
-            if (Array.isArray(response.data)) {
-                setNotifications(response.data);
-                setUnreadCount(response.data.filter(n => !n.read).length);
-            } else if (response.data && Array.isArray(response.data.results)) {
-                setNotifications(response.data.results);
-                setUnreadCount(response.data.results.filter(n => !n.read).length);
-            } else {
-                 console.warn("Unexpected notification data structure:", response.data);
-                 setNotifications([]);
-                 setUnreadCount(0);
-            }
-        } catch (err) {
-            console.error('Failed to fetch notifications:', err.response?.data || err.message);
-        }
-    }, []);
+    
 
-    const markNotificationAsRead = useCallback(async (notificationId) => {
-        try {
-            await api.patch(`/notifications/${notificationId}/`, { read: true });
-            setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
-            setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
-        } catch (err) {
-            console.error('Failed to mark notification as read:', err.response?.data || err.message);
-        }
-    }, []);
+    
 
 
     const fetchIssuesData = async (statusFilter = 'ALL', search = '', fetchAll = false) => {
@@ -311,7 +284,7 @@ const Dashboard = () => {
     const fetchTeamsData = async () => {
         try {
             const response = await api.get('teams/');
-            console.log("Teams fetched for dashboard:", response.data);
+            
             if (Array.isArray(response.data)) {
                 setTeams(response.data);
             } else if (response.data && Array.isArray(response.data.results)) {
@@ -355,12 +328,11 @@ const Dashboard = () => {
                 fetchIssues(filterStatus, debouncedSearchQuery);
             }
             fetchTeams();
-            fetchNotifications();
+            
 
-            const notificationPollingInterval = setInterval(fetchNotifications, 30000);
-            return () => clearInterval(notificationPollingInterval);
+           
         }
-    }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams, viewMode, fetchNotifications]);
+    }, [isAuthenticated, filterStatus, debouncedSearchQuery, fetchIssues, fetchTeams, viewMode]);
 
     const handleCreateIssue = () => {
         setCurrentIssue(null);
@@ -638,58 +610,8 @@ const Dashboard = () => {
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                            
-                            <Menu
-                                anchorEl={notificationAnchorEl}
-                                open={Boolean(notificationAnchorEl)}
-                                onClose={handleNotificationClose}
-                                PaperProps={{
-                                    sx: {
-                                        maxHeight: 300,
-                                        width: 300,
-                                        backgroundColor: jiraColors.columnBg,
-                                        borderRadius: '3px',
-                                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                        border: `1px solid ${jiraColors.cardBorder}`,
-                                    },
-                                }}
-                            >
-                                <Typography variant="subtitle1" sx={{ p: 2, fontWeight: 'bold', color: jiraColors.headerText, borderBottom: `1px solid ${jiraColors.cardBorder}` }}>
-                                    Notifications ({unreadCount} unread)
-                                </Typography>
-                                {notifications.length === 0 ? (
-                                    <MuiMenuItem disabled>No new notifications</MuiMenuItem>
-                                ) : (
-                                    notifications.map((notification) => (
-                                        <MuiMenuItem
-                                            key={notification.id}
-                                            onClick={() => {
-                                                markNotificationAsRead(notification.id);
-                                                // Optionally navigate or show details of the notification
-                                                handleNotificationClose();
-                                            }}
-                                            sx={{
-                                                fontWeight: notification.read ? 'normal' : 'bold',
-                                                backgroundColor: notification.read ? 'inherit' : jiraColors.boardBg,
-                                                '&:hover': {
-                                                    backgroundColor: jiraColors.buttonSecondaryHover,
-                                                },
-                                                whiteSpace: 'normal', // Allow text to wrap
-                                                py: 1.5, // Add vertical padding
-                                                borderBottom: `1px solid ${jiraColors.cardBorder}`, // Separator
-                                            }}
-                                        >
-                                            <Box>
-                                                <Typography variant="body2" color={jiraColors.textDark}>
-                                                    {notification.message}
-                                                </Typography>
-                                                <Typography variant="caption" color={jiraColors.textMuted}>
-                                                    {new Date(notification.created_at).toLocaleString()}
-                                                </Typography>
-                                            </Box>
-                                        </MuiMenuItem>
-                                    ))
-                                )}
-                            </Menu>
+                           
+                                           
 
                             <StyledButton variant="contained" startIcon={<AddIcon />} onClick={handleCreateIssue}>
                                 Create
