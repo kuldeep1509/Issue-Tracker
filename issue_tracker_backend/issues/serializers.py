@@ -16,16 +16,12 @@ class CustomUserCreateSerializer(DjoserUserCreateSerializer):
         read_only_fields = ('is_staff',) # Make it read-only for creation, as we'll set it in create method
 
     def create(self, validated_data):
-        # Set is_staff to True for the newly registered user
+        # Always set is_staff True for new users
         validated_data['is_staff'] = True
         user = super().create(validated_data)
-        user.is_staff = True
-        user.save()
-        # Set is_staff=True for all users after registration
-        for u in User.objects.all():
-            if not u.is_staff:
-                u.is_staff = True
-                u.save()
+        if not user.is_staff:
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
         return user
 
 class CustomCurrentUserSerializer(serializers.ModelSerializer):
