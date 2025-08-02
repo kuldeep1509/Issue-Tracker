@@ -900,25 +900,24 @@ const Dashboard = () => {
                                                     </Box>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-                                                  
-                                                    {/* Only show delete button if current user is owner or admin */}
+                                                    <StyledButton size="small" variant="text" sx={{ flexGrow: 1, color: jiraColors.primaryBlue }} onClick={(e) => { e.stopPropagation(); handleCreateIssueForTeam(team); }}>
+                                                        Assign Issue
+                                                    </StyledButton>
                                                     {(user?.id === team.owner?.id || user?.is_staff) && (
                                                         <StyledButton
                                                             size="small"
-                                                            variant="outlined"
+                                                            variant="text"
                                                             color="error"
                                                             startIcon={<DeleteIcon />}
                                                             sx={{
                                                                 flexGrow: 1,
-                                                                borderColor: jiraColors.deleteRed,
                                                                 color: jiraColors.deleteRed,
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(255, 77, 79, 0.1)',
-                                                                    borderColor: jiraColors.deleteRed,
                                                                 },
                                                             }}
                                                             onClick={(e) => {
-                                                                e.stopPropagation(); // Prevent opening issue modal
+                                                                e.stopPropagation();
                                                                 handleDeleteTeam(team.id, team.name, team.owner?.id);
                                                             }}
                                                         >
