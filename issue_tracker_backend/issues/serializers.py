@@ -64,16 +64,19 @@ class IssueSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
-    assigned_team = serializers.PrimaryKeyRelatedField(
+    assigned_team = TeamSerializer(read_only=True)
+    assigned_team_id = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
+        source='assigned_team',
+        write_only=True,
         allow_null=True,
         required=False
     )
 
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'description', 'status', 'owner', 'assigned_to', 'assigned_to_id', 'assigned_team', 'created_at', 'updated_at']
-        read_only_fields = ['owner', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'description', 'status', 'owner', 'assigned_to', 'assigned_to_id', 'assigned_team', 'assigned_team_id', 'created_at', 'updated_at']
+        read_only_fields = ['owner', 'created_at', 'updated_at', 'assigned_team']
 
     def validate(self, data):
         if data.get('assigned_to') and data.get('assigned_team'):

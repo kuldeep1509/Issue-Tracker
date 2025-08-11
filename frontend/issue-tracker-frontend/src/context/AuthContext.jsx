@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
     // Store tokens in cookies
      Cookies.set('access_token', access, { expires: 1/24, secure: process.env.NODE_ENV === 'production' }); // 1 hour expiry
-    Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
+     Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
 
     await loadUser(); // Fetch user details and update auth state
     navigate('/dashboard'); // Redirect to dashboard after successful login

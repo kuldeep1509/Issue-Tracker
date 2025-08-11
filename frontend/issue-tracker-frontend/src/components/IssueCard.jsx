@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Chip, IconButton, Box } from '@mui/material';
+import { Card, CardContent, Typography, Chip, IconButton, Box, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDrag } from 'react-dnd';
@@ -124,6 +124,8 @@ const ActionIconButton = styled(IconButton)(({ actiontype }) => ({
     },
 }));
 
+import { useState } from 'react';
+
 const IssueCard = ({ issue, onEdit, onDelete }) => {
     const { user } = useAuth();
     const canManageIssue = user && (issue.owner?.id === user.id || user.is_staff);
@@ -145,8 +147,14 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
         }),
     }));
 
+    // Modal state
+    const [open, setOpen] = useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
     return (
-        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0}>
+        <>
+        <StyledIssueCard ref={drag} isdragging={isDragging ? 1 : 0} onClick={handleOpen} sx={{ cursor: 'pointer' }}>
             <StyledCardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                     <IssueTitle variant="h6" component="div" sx={{ flexGrow: 1, pr: 1 }}>
@@ -154,12 +162,19 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                     </IssueTitle>
                     <StyledChip label={issue.status.replace('_', ' ')} labelcolor={getStatusColor(issue.status)} />
                 </Box>
-                <IssueDescription variant="body2">
-                    {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
-                </IssueDescription>
+                {issue.description && (
+                    <IssueDescription variant="body2">
+                        {issue.description.substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
+                    </IssueDescription>
+                )}
                 <IssueMetaText variant="caption" display="block">
                     Owner: {issue.owner?.username || 'N/A'}
-                    {issue.assigned_to && ` | Assigned to: ${issue.assigned_to?.username || 'N/A'}`}
+                    {issue.assigned_to && (
+                        <> | Assigned to: {issue.assigned_to?.username || 'N/A'}</>
+                    )}
+                    {!issue.assigned_to && issue.assigned_team && (
+                        <> | Team: {issue.assigned_team?.name || 'N/A'}</>
+                    )}
                 </IssueMetaText>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 0.5 }}>
                     {canManageIssue && (
@@ -185,7 +200,51 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                 </Box>
             </StyledCardContent>
         </StyledIssueCard>
+
+        {/* Modal for issue details */}
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+            <DialogTitle>
+                {issue.title}
+            </DialogTitle>
+            <DialogContent dividers>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Status: <b>{issue.status.replace('_', ' ')}</b>
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                    {issue.description || 'No description.'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Owner: {issue.owner?.username || 'N/A'}
+                </Typography>
+                {issue.assigned_to && (
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Assigned to: {issue.assigned_to?.username || 'N/A'}
+                    </Typography>
+                )}
+                {issue.assigned_team && (
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Team: {issue.assigned_team?.name || 'N/A'}
+                    </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Created: {issue.created_at ? new Date(issue.created_at).toLocaleString() : 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Updated: {issue.updated_at ? new Date(issue.updated_at).toLocaleString() : 'N/A'}
+                </Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} color="primary">Close</Button>
+                {canManageIssue && (
+                    <>
+                        <Button onClick={() => { handleClose(); onEdit(issue); }} color="primary" startIcon={<EditIcon />}>Edit</Button>
+                        <Button onClick={() => { handleClose(); onDelete(issue.id); }} color="error" startIcon={<DeleteIcon />}>Delete</Button>
+                    </>
+                )}
+            </DialogActions>
+        </Dialog>
+        </>
     );
-};
+}
 
 export default IssueCard;
