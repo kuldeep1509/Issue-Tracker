@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system'; // Import styled
-import GoogleIcon from '@mui/icons-material/Google';
 
 // --- Jira-like Color Palette Definition (Consistent with LoginPage) ---
 const jiraLoginColors = {
@@ -146,8 +145,11 @@ const RegisterPage = () => {
                     navigate('/login');
                 }, 2000);
             } catch (err) {
+                console.error("Registration failed:", err.response?.data || err.message, err);
+
                 const serverErrors = err.response?.data;
                 let errorMessage = 'An unexpected error occurred during registration.';
+
                 if (typeof serverErrors === 'object' && serverErrors !== null) {
                     const messages = Object.keys(serverErrors)
                         .map(key => {
@@ -162,6 +164,7 @@ const RegisterPage = () => {
                     errorMessage = `Failed to register:\n${messages}`;
                 } else if (typeof serverErrors === 'string') {
                     errorMessage = 'An unexpected server error occurred. Please check the backend console.';
+                    console.error("Backend returned HTML error:", serverErrors);
                 } else {
                     errorMessage = err.response?.data?.detail || err.message || errorMessage;
                 }
@@ -181,25 +184,16 @@ const RegisterPage = () => {
                     </Avatar>
                     <Typography
                         component="h1"
-                        variant="h5"
+                        variant="h5" // Smaller heading than before, more in line with Jira
                         mb={3}
                         sx={{ fontWeight: 600, color: jiraLoginColors.textDark, textAlign: 'center' }}
                     >
                         Create Account
                     </Typography>
-                    <JiraButton
-                        fullWidth
-                        variant="contained"
-                        startIcon={<GoogleIcon />}
-                        sx={{ mt: 2, mb: 2, backgroundColor: '#fff', color: jiraLoginColors.primaryBlue, border: `1px solid ${jiraLoginColors.primaryBlue}`, '&:hover': { backgroundColor: jiraLoginColors.backgroundLight } }}
-                        onClick={() => {
-                            window.location.href = '/accounts/google/login/';
-                        }}
-                    >
-                        Sign up with Google
-                    </JiraButton>
+
                     {error && <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
                     {success && <Alert severity="success" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{success}</Alert>}
+
                     <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ width: '100%' }}>
                         <JiraTextField
                             fullWidth
@@ -214,6 +208,7 @@ const RegisterPage = () => {
                             error={formik.touched.username && Boolean(formik.errors.username)}
                             helperText={formik.touched.username && formik.errors.username}
                         />
+
                         <JiraTextField
                             fullWidth
                             id="email"
@@ -226,6 +221,7 @@ const RegisterPage = () => {
                             error={formik.touched.email && Boolean(formik.errors.email)}
                             helperText={formik.touched.email && formik.errors.email}
                         />
+
                         <JiraTextField
                             fullWidth
                             name="password"
@@ -239,6 +235,7 @@ const RegisterPage = () => {
                             error={formik.touched.password && Boolean(formik.errors.password)}
                             helperText={formik.touched.password && formik.errors.password}
                         />
+
                         <JiraTextField
                             fullWidth
                             name="re_password"
@@ -252,15 +249,17 @@ const RegisterPage = () => {
                             error={formik.touched.re_password && Boolean(formik.errors.re_password)}
                             helperText={formik.touched.re_password && formik.errors.re_password}
                         />
+
                         <JiraButton
                             type="submit"
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 2, mb: 2 }}
+                            sx={{ mt: 2, mb: 2 }} // Adjusted margins for button
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
                             {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign Up'}
                         </JiraButton>
+
                         <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
                             Already have an account?{' '}
                             <Link

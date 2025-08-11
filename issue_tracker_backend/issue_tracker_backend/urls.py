@@ -35,5 +35,5 @@ urlpatterns = [
     # This includes /api/issues/, /api/issues/{id}/, and custom actions like /api/issues/my_issues/
     path('api/', include('issues.urls')),
 
-    path('accounts/', include('allauth.urls'))#
+  
 ]

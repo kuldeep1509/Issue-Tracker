@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
+    TextField,
     Button,
     Typography,
     Container,
     Box,
-    Avatar,
-    TextField,
     Alert,
     CircularProgress,
+    Avatar,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 import { styled } from '@mui/system';
-import GoogleIcon from '@mui/icons-material/Google';
 
 // --- Jira-like Color Palette Definition ---
 const jiraLoginColors = {
@@ -55,6 +56,38 @@ const JiraFormContainer = styled(Box)(({ theme }) => ({
     border: `1px solid ${jiraLoginColors.backgroundMedium}`, // Light border
 }));
 
+const JiraTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(2), // Consistent vertical margin
+    '& .MuiOutlinedInput-root': {
+        borderRadius: '3px', // Match Jira's input field corners
+        '& fieldset': {
+            borderColor: jiraLoginColors.backgroundMedium,
+        },
+        '&:hover fieldset': {
+            borderColor: jiraLoginColors.textMuted,
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: jiraLoginColors.primaryBlue,
+            borderWidth: '2px',
+        },
+    },
+    '& .MuiInputBase-input': {
+        padding: '12px 14px', // Standard input padding
+        color: jiraLoginColors.textDark,
+    },
+    '& .MuiInputLabel-root': {
+        color: jiraLoginColors.textMuted,
+        '&.Mui-focused': {
+            color: jiraLoginColors.primaryBlue,
+        },
+    },
+    '& .MuiFormHelperText-root': {
+        color: jiraLoginColors.errorRed,
+        marginTop: theme.spacing(0.5),
+        marginBottom: 0,
+    }
+}));
+
 const JiraButton = styled(Button)(({ theme }) => ({
     backgroundColor: jiraLoginColors.primaryBlue,
     color: jiraLoginColors.white,
@@ -74,112 +107,119 @@ const JiraButton = styled(Button)(({ theme }) => ({
 }));
 
 const LoginPage = () => {
-    const navigate = useNavigate();
-    const { login } = useAuth();
-    const [form, setForm] = useState({ username: '', password: '' });
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth(); // Assuming useAuth provides a login function
 
+    const validationSchema = yup.object({
+        username: yup.string().trim().required('Username is required'),
+        password: yup.string().required('Password is required'),
+    });
+
+    const formik = useFormik({
+        initialValues: { username: '', password: '' },
+        validationSchema,
+        onSubmit: async (values) => {
+            setLoading(true);
+            setError('');
+            try {
+                const success = await login(values.username, values.password);
+                if (!success) {
+                    setError('Invalid username or password. Please try again.');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                setError('Something went wrong. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        },
+    });
+
+    // Effect to control body overflow
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
-            document.body.style.overflow = '';
+            document.body.style.overflow = ''; // Reset on unmount
         };
     }, []);
-
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            await login(form.username, form.password);
-            navigate('/');
-        } catch (err) {
-            setError('Invalid credentials or server error.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <JiraBackgroundBox>
             <Container maxWidth="xs">
                 <JiraFormContainer>
+                    {/* Jira typically uses a logo here, or just text. Keeping a small icon for visual cue. */}
                     <Avatar sx={{ m: 1, bgcolor: jiraLoginColors.primaryBlue, width: 48, height: 48 }}>
                         <LockOutlinedIcon sx={{ fontSize: 24 }} />
                     </Avatar>
                     <Typography
                         component="h1"
-                        variant="h5"
-                        mb={3}
+                        variant="h5" // Smaller heading than before, more in line with Jira
+                        mb={3} // Consistent margin below heading
                         sx={{ fontWeight: 600, color: jiraLoginColors.textDark, textAlign: 'center' }}
                     >
-                        Sign In
+                        Log in to your account
                     </Typography>
-                    <JiraButton
-                        fullWidth
-                        variant="contained"
-                        startIcon={<GoogleIcon />}
-                        sx={{ mt: 2, mb: 2, backgroundColor: '#fff', color: jiraLoginColors.primaryBlue, border: `1px solid ${jiraLoginColors.primaryBlue}`, '&:hover': { backgroundColor: jiraLoginColors.backgroundLight } }}
-                        onClick={() => {
-                            window.location.href = '/accounts/google/login/';
-                        }}
-                    >
-                        Sign in with Google
-                    </JiraButton>
-                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-                        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                        <TextField
+
+                    {error && <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
+
+                    <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
+                        <JiraTextField
                             fullWidth
                             id="username"
-                            label="Username or Email"
                             name="username"
-                            autoComplete="username"
-                            autoFocus
-                            value={form.username}
-                            onChange={handleChange}
-                            sx={{ mb: 2 }}
+                            label="Username"
+                            variant="outlined"
+                            value={formik.values.username}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.username && Boolean(formik.errors.username)}
+                            helperText={formik.touched.username && formik.errors.username}
+                            required
                         />
-                        <TextField
+
+                        <JiraTextField
                             fullWidth
+                            id="password"
                             name="password"
                             label="Password"
                             type="password"
-                            id="password"
-                            autoComplete="current-password"
-                            value={form.password}
-                            onChange={handleChange}
-                            sx={{ mb: 2 }}
+                            variant="outlined"
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.password && Boolean(formik.errors.password)}
+                            helperText={formik.touched.password && formik.errors.password}
+                            required
                         />
+
                         <JiraButton
                             type="submit"
                             fullWidth
                             variant="contained"
-                            disabled={loading}
+                            sx={{ mt: 2, mb: 2 }} // Adjusted margins for button
+                            disabled={loading || !formik.isValid || !formik.dirty}
                         >
-                            {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign In'}
+                            {loading ? <CircularProgress size={20} color="inherit" /> : 'Log In'}
                         </JiraButton>
+
+                        <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
+                            Don’t have an account?{' '}
+                            <Link
+                                to="/register"
+                                style={{
+                                    textDecoration: 'none',
+                                    color: jiraLoginColors.primaryBlue,
+                                    fontWeight: 600,
+                                    transition: 'color 0.2s ease-in-out',
+                                }}
+                                onMouseOver={(e) => e.target.style.color = jiraLoginColors.primaryBlueDark}
+                                onMouseOut={(e) => e.target.style.color = jiraLoginColors.primaryBlue}
+                            >
+                                Sign Up
+                            </Link>
+                        </Typography>
                     </Box>
-                    <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
-                        Don't have an account?{' '}
-                        <Link
-                            to="/register"
-                            style={{
-                                textDecoration: 'none',
-                                color: jiraLoginColors.primaryBlue,
-                                fontWeight: 600,
-                                transition: 'color 0.2s ease-in-out',
-                            }}
-                            onMouseOver={e => e.target.style.color = jiraLoginColors.primaryBlueDark}
-                            onMouseOut={e => e.target.style.color = jiraLoginColors.primaryBlue}
-                        >
-                            Sign Up
-                        </Link>
-                    </Typography>
                 </JiraFormContainer>
             </Container>
         </JiraBackgroundBox>
