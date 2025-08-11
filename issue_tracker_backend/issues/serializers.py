@@ -38,7 +38,7 @@ class SimpleUserSerializer(DjoserUserSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     created_by = SimpleUserSerializer(read_only=True)
     members = SimpleUserSerializer(many=True, read_only=True)
-    member_ids = serializers.PrimaryKeyRelatedField(
+    member_ids = serializers.PrimaryKeyRelatedField( #maps with members field and used to set and get the members field by using members id
         many=True,
         queryset=User.objects.all(),
         write_only=True,
