@@ -436,7 +436,7 @@ const Dashboard = () => {
             switch (status) {
                 case 'OPEN': return 'OPEN';
                 case 'IN_PROGRESS': return 'IN PROGRESS';
-                case 'CLOSED': return 'DONE';
+                case 'CLOSED': return 'CLOSED';
                 default: return 'UNKNOWN';
             }
         };
