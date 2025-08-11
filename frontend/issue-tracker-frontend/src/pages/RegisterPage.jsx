@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system'; // Import styled
+import GoogleIcon from '@mui/icons-material/Google';
 
 // --- Jira-like Color Palette Definition (Consistent with LoginPage) ---
 const jiraLoginColors = {
@@ -96,84 +97,7 @@ const JiraButton = styled(Button)(({ theme }) => ({
 
 
 const RegisterPage = () => {
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { register } = useAuth();
     const navigate = useNavigate();
-
-    // Define the Yup validation schema
-    const validationSchema = yup.object({
-        username: yup
-            .string()
-            .trim()
-            .min(3, 'Username must be at least 3 characters')
-            .max(50, 'Username must not exceed 50 characters')
-            .required('Username is required'),
-        email: yup
-            .string()
-            .trim()
-            .email('Enter a valid email')
-            .required('Email is required'),
-        password: yup
-            .string()
-            .min(8, 'Password must be at least 8 characters')
-            .required('Password is required'),
-        re_password: yup
-            .string()
-            .oneOf([yup.ref('password'), null], 'Passwords must match')
-            .required('Confirm Password is required'),
-    });
-
-    // Initialize Formik
-    const formik = useFormik({
-        initialValues: {
-            username: '',
-            email: '',
-            password: '',
-            re_password: '',
-        },
-        validationSchema: validationSchema,
-        onSubmit: async (values) => {
-            setLoading(true);
-            setError('');
-            setSuccess('');
-            try {
-                await register(values.username, values.email, values.password);
-                setSuccess('Registration successful! You can now login.');
-                setTimeout(() => {
-                    navigate('/login');
-                }, 2000);
-            } catch (err) {
-                console.error("Registration failed:", err.response?.data || err.message, err);
-
-                const serverErrors = err.response?.data;
-                let errorMessage = 'An unexpected error occurred during registration.';
-
-                if (typeof serverErrors === 'object' && serverErrors !== null) {
-                    const messages = Object.keys(serverErrors)
-                        .map(key => {
-                            const errorValue = serverErrors[key];
-                            if (Array.isArray(errorValue)) {
-                                return `${key}: ${errorValue.join(', ')}`;
-                            } else {
-                                return `${key}: ${errorValue}`;
-                            }
-                        })
-                        .join('\n');
-                    errorMessage = `Failed to register:\n${messages}`;
-                } else if (typeof serverErrors === 'string') {
-                    errorMessage = 'An unexpected server error occurred. Please check the backend console.';
-                    console.error("Backend returned HTML error:", serverErrors);
-                } else {
-                    errorMessage = err.response?.data?.detail || err.message || errorMessage;
-                }
-                setError(errorMessage);
-            } finally {
-                setLoading(false);
-            }
-        },
-    });
 
     return (
         <JiraBackgroundBox>
@@ -184,99 +108,39 @@ const RegisterPage = () => {
                     </Avatar>
                     <Typography
                         component="h1"
-                        variant="h5" // Smaller heading than before, more in line with Jira
+                        variant="h5"
                         mb={3}
                         sx={{ fontWeight: 600, color: jiraLoginColors.textDark, textAlign: 'center' }}
                     >
                         Create Account
                     </Typography>
-
-                    {error && <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
-                    {success && <Alert severity="success" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{success}</Alert>}
-
-                    <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ width: '100%' }}>
-                        <JiraTextField
-                            fullWidth
-                            id="username"
-                            label="Username"
-                            name="username"
-                            autoComplete="username"
-                            autoFocus
-                            value={formik.values.username}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.username && Boolean(formik.errors.username)}
-                            helperText={formik.touched.username && formik.errors.username}
-                        />
-
-                        <JiraTextField
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            autoComplete="email"
-                            value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.email && Boolean(formik.errors.email)}
-                            helperText={formik.touched.email && formik.errors.email}
-                        />
-
-                        <JiraTextField
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type="password"
-                            id="password"
-                            autoComplete="new-password"
-                            value={formik.values.password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.password && Boolean(formik.errors.password)}
-                            helperText={formik.touched.password && formik.errors.password}
-                        />
-
-                        <JiraTextField
-                            fullWidth
-                            name="re_password"
-                            label="Confirm Password"
-                            type="password"
-                            id="re_password"
-                            autoComplete="new-password"
-                            value={formik.values.re_password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.re_password && Boolean(formik.errors.re_password)}
-                            helperText={formik.touched.re_password && formik.errors.re_password}
-                        />
-
-                        <JiraButton
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            sx={{ mt: 2, mb: 2 }} // Adjusted margins for button
-                            disabled={loading || !formik.isValid || !formik.dirty}
+                    <JiraButton
+                        fullWidth
+                        variant="contained"
+                        startIcon={<GoogleIcon />}
+                        sx={{ mt: 2, mb: 2, backgroundColor: '#fff', color: jiraLoginColors.primaryBlue, border: `1px solid ${jiraLoginColors.primaryBlue}`, '&:hover': { backgroundColor: jiraLoginColors.backgroundLight } }}
+                        onClick={() => {
+                            window.location.href = '/accounts/google/login/';
+                        }}
+                    >
+                        Sign up with Google
+                    </JiraButton>
+                    <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
+                        Already have an account?{' '}
+                        <Link
+                            to="/login"
+                            style={{
+                                textDecoration: 'none',
+                                color: jiraLoginColors.primaryBlue,
+                                fontWeight: 600,
+                                transition: 'color 0.2s ease-in-out',
+                            }}
+                            onMouseOver={e => e.target.style.color = jiraLoginColors.primaryBlueDark}
+                            onMouseOut={e => e.target.style.color = jiraLoginColors.primaryBlue}
                         >
-                            {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign Up'}
-                        </JiraButton>
-
-                        <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
-                            Already have an account?{' '}
-                            <Link
-                                to="/login"
-                                style={{
-                                    textDecoration: 'none',
-                                    color: jiraLoginColors.primaryBlue,
-                                    fontWeight: 600,
-                                    transition: 'color 0.2s ease-in-out',
-                                }}
-                                onMouseOver={(e) => e.target.style.color = jiraLoginColors.primaryBlueDark}
-                                onMouseOut={(e) => e.target.style.color = jiraLoginColors.primaryBlue}
-                            >
-                                Sign In
-                            </Link>
-                        </Typography>
-                    </Box>
+                            Sign In
+                        </Link>
+                    </Typography>
                 </JiraFormContainer>
             </Container>
         </JiraBackgroundBox>

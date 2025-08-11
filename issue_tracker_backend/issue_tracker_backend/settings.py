@@ -274,7 +274,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'whitenoise.runserver_nostatic',
     'issues.apps.IssuesConfig',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = 1
 
 # Middleware
 MIDDLEWARE = [
@@ -282,6 +289,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -403,6 +411,21 @@ CSRF_TRUSTED_ORIGINS = [
     "https://issue-tracker-chi-swart.vercel.app",
     "https://issue-tracker-9auzl7ckm-kuldeeps-projects-d69e0562.vercel.app" 
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        }
+    }
+}
 
 CORS_ALLOW_HEADERS = [
     'accept',
