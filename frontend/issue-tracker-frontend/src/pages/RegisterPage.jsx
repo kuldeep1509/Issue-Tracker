@@ -94,8 +94,8 @@ const JiraButton = styled(Button)(({ theme }) => ({
     },
 }));
 
-// Google OAuth client ID (must match backend verifier). Consider moving to env var.
-const GOOGLE_CLIENT_ID = '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com';
+// Google OAuth client ID (read from env in dev/prod). Fallback to backend-configured ID.
+const GOOGLE_CLIENT_ID = import.meta?.env?.VITE_GOOGLE_CLIENT_ID || '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com';
 
 const RegisterPage = () => {
     const [error, setError] = useState('');

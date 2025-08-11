@@ -417,15 +417,22 @@ AUTHENTICATION_BACKENDS = (#
     
 )
 
+# Google OAuth client configuration
+GOOGLE_CLIENT_ID = config(
+    'GOOGLE_CLIENT_ID',
+    default='420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com'
+)
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret': GOOGLE_CLIENT_SECRET,
             'key': ''
         }
     }
-}#
+}
 
 CORS_ALLOW_HEADERS = [
     'accept',
