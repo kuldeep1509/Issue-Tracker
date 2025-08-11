@@ -1,6 +1,5 @@
 # issues/serializers.py
 from rest_framework import serializers
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from .models import Issue, Team
 from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreateSerializer as DjoserUserCreateSerializer
@@ -8,49 +7,13 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer, UserCreat
 User = get_user_model()
 
 # New: Custom UserCreateSerializer to set is_staff=True
-from google.oauth2 import id_token as google_id_token
-from google.auth.transport import requests as google_requests
-
-
 class CustomUserCreateSerializer(DjoserUserCreateSerializer):
-    # Require a Google ID token for self-service registrations
-    google_id_token = serializers.CharField(write_only=True, required=False)
     class Meta(DjoserUserCreateSerializer.Meta):
         model = User
         # Include 'is_staff' in fields to ensure it's handled,
         # but make it read_only as we're setting it programmatically.
-        fields = ('id', 'username', 'email', 'password', 'is_staff', 'google_id_token')
+        fields = ('id', 'username', 'email', 'password', 'is_staff')
         read_only_fields = ('is_staff',) # Make it read-only for creation, as we'll set it in create method
-
-    def validate(self, attrs):
-        request = self.context.get('request')
-        is_staff_creator = bool(request and request.user and request.user.is_authenticated and request.user.is_staff)
-
-        # Staff-created accounts (e.g., inviting users) bypass Google verification
-        if not is_staff_creator:
-            token = attrs.pop('google_id_token', None)
-            if not token:
-                raise serializers.ValidationError({'google_id_token': 'Google verification is required to register.'})
-            try:
-                client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
-                idinfo = google_id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
-
-                if idinfo.get('iss') not in {'https://accounts.google.com', 'accounts.google.com'}:
-                    raise serializers.ValidationError({'google_id_token': 'Invalid token issuer.'})
-
-                if not idinfo.get('email_verified'):
-                    raise serializers.ValidationError({'google_id_token': 'Google email is not verified.'})
-
-                token_email = idinfo.get('email')
-                provided_email = attrs.get('email')
-                if token_email and provided_email and token_email.lower() != provided_email.lower():
-                    raise serializers.ValidationError({'email': 'Email must match your Google account email.'})
-            except serializers.ValidationError:
-                raise
-            except Exception:
-                raise serializers.ValidationError({'google_id_token': 'Invalid Google ID token.'})
-
-        return super().validate(attrs)
 
     def create(self, validated_data):
         # Always set is_staff True for new users
