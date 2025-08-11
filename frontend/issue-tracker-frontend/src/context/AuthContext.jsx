@@ -55,10 +55,14 @@ export const AuthProvider = ({ children }) => {
     }
     };
 
-    const register = async (username, email, password) => {
+    const register = async (username, email, password, googleIdToken) => {
      try {
      // Call Djoser's user registration endpoint
+<<<<<<< HEAD
      const res = await api.post('/auth/users/', { username, email, password});
+=======
+      const res = await api.post('/auth/users/', { username, email, password, google_id_token: googleIdToken });
+>>>>>>> 41e2e866c20994020207eb5d44b2bf0001930125
      return res.data; // Return new user data if needed (e.g., for success message)
     } catch (error) {
      console.error("Registration failed in AuthContext:", error.response?.data || error.message);

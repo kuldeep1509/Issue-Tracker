@@ -417,6 +417,25 @@ AUTHENTICATION_BACKENDS = (#
     
 )
 
+<<<<<<< HEAD
+=======
+# Google OAuth client configuration
+GOOGLE_CLIENT_ID = config(
+    'GOOGLE_CLIENT_ID',
+    default='420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com'
+)
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret': GOOGLE_CLIENT_SECRET,
+            'key': ''
+        }
+    }
+}
+>>>>>>> 41e2e866c20994020207eb5d44b2bf0001930125
 
 CORS_ALLOW_HEADERS = [
     'accept',

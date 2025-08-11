@@ -93,11 +93,24 @@ const JiraButton = styled(Button)(({ theme }) => ({
         color: jiraLoginColors.textMuted,
     },
 }));
+<<<<<<< HEAD
+=======
+
+// Google OAuth client ID (read from env in dev/prod). Fallback to backend-configured ID.
+const GOOGLE_CLIENT_ID = import.meta?.env?.VITE_GOOGLE_CLIENT_ID || '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com';
+
+>>>>>>> 41e2e866c20994020207eb5d44b2bf0001930125
 const RegisterPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
 
+=======
+    const [googleIdToken, setGoogleIdToken] = useState('');
+    const [googleEmail, setGoogleEmail] = useState('');
+    const googleButtonRef = useRef(null);
+>>>>>>> 41e2e866c20994020207eb5d44b2bf0001930125
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -124,6 +137,63 @@ const RegisterPage = () => {
             .required('Confirm Password is required'),
     });
 
+    // Load Google Identity Services and render a button to get an ID token
+    useEffect(() => {
+        // Skip if already loaded
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+            initializeGsi();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGsi;
+        document.body.appendChild(script);
+        return () => {
+            document.body.removeChild(script);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    function initializeGsi() {
+        try {
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGsiCredential,
+            });
+            if (googleButtonRef.current) {
+                window.google.accounts.id.renderButton(googleButtonRef.current, {
+                    theme: 'outline',
+                    size: 'large',
+                    shape: 'rectangular',
+                    text: 'continue_with',
+                });
+            }
+        } catch (e) {
+            // no-op; UI will show manual error on submit if token missing
+        }
+    }
+
+    function handleGsiCredential(response) {
+        const credential = response?.credential;
+        if (!credential) return;
+        setGoogleIdToken(credential);
+        try {
+            const payload = JSON.parse(atob(credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const emailFromToken = payload?.email || '';
+            if (emailFromToken) {
+                setGoogleEmail(emailFromToken);
+                // If user hasn't typed an email yet, or it's different, set it to Google email
+                if (!formik.values.email || formik.values.email.toLowerCase() !== emailFromToken.toLowerCase()) {
+                    formik.setFieldValue('email', emailFromToken, true);
+                }
+            }
+        } catch (_) {
+            // ignore decode issues; backend will verify
+        }
+    }
+
     // Initialize Formik
     const formik = useFormik({
         initialValues: {
@@ -137,8 +207,18 @@ const RegisterPage = () => {
             setLoading(true);
             setError('');
             setSuccess('');
+            if (!googleIdToken) {
+                setError('Please verify your Google account using the button below before registering.');
+                setLoading(false);
+                return;
+            }
+            if (googleEmail && values.email && googleEmail.toLowerCase() !== values.email.toLowerCase()) {
+                setError('Email must match your Google account email.');
+                setLoading(false);
+                return;
+            }
             try {
-                await register(values.username, values.email, values.password);
+                await register(values.username, values.email, values.password, googleIdToken);
                 setSuccess('Registration successful! You can now login.');
                 setTimeout(() => {
                     navigate('/login');
@@ -218,6 +298,14 @@ const RegisterPage = () => {
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             error={formik.touched.email && Boolean(formik.errors.email)}
+<<<<<<< HEAD
+=======
+                            helperText={
+                                (formik.touched.email && formik.errors.email) ||
+                                (googleEmail ? 'Email is set from your Google account' : '')
+                            }
+                            disabled={Boolean(googleEmail)}
+>>>>>>> 41e2e866c20994020207eb5d44b2bf0001930125
                         />
 
                         <JiraTextField
@@ -247,6 +335,15 @@ const RegisterPage = () => {
                             error={formik.touched.re_password && Boolean(formik.errors.re_password)}
                             helperText={formik.touched.re_password && formik.errors.re_password}
                         />
+
+                        <Box sx={{ width: '100%', mt: 1, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div ref={googleButtonRef} />
+                            {googleEmail && (
+                                <Typography variant="body2" sx={{ mt: 1, color: jiraLoginColors.textMuted }}>
+                                    Google account verified: {googleEmail}
+                                </Typography>
+                            )}
+                        </Box>
 
                         <JiraButton
                             type="submit"
