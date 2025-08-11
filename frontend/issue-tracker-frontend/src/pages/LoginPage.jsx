@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Button,
     Typography,
     Container,
     Box,
     Avatar,
+    TextField,
+    Alert,
+    CircularProgress,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Link, useNavigate } from 'react-router-dom';
@@ -72,15 +75,35 @@ const JiraButton = styled(Button)(({ theme }) => ({
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const { login } = useAuth(); // Assuming useAuth provides a login function
+    const { login } = useAuth();
+    const [form, setForm] = useState({ username: '', password: '' });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    // Effect to control body overflow
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
-            document.body.style.overflow = ''; // Reset on unmount
+            document.body.style.overflow = '';
         };
     }, []);
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            await login(form.username, form.password);
+            navigate('/');
+        } catch (err) {
+            setError('Invalid credentials or server error.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <JiraBackgroundBox>
@@ -108,6 +131,39 @@ const LoginPage = () => {
                     >
                         Sign in with Google
                     </JiraButton>
+                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                        <TextField
+                            fullWidth
+                            id="username"
+                            label="Username or Email"
+                            name="username"
+                            autoComplete="username"
+                            autoFocus
+                            value={form.username}
+                            onChange={handleChange}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            name="password"
+                            label="Password"
+                            type="password"
+                            id="password"
+                            autoComplete="current-password"
+                            value={form.password}
+                            onChange={handleChange}
+                            sx={{ mb: 2 }}
+                        />
+                        <JiraButton
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            disabled={loading}
+                        >
+                            {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign In'}
+                        </JiraButton>
+                    </Box>
                     <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
                         Don't have an account?{' '}
                         <Link
