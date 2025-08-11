@@ -165,18 +165,7 @@ export default function TeamForm({ onTeamCreated }) {
             });
 
             // Show an info toast for each member added (on the admin's side)
-            selectedUsers.forEach(user => {
-                toast.info(`Admin notification: ${user.username} has been added to team "${res.data.name}".`, {
-                    position: "bottom-right", // Different position for member notifications
-                    autoClose: 4000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            });
+         
 
             setTeamName('');
             setSelectedUsers([]);

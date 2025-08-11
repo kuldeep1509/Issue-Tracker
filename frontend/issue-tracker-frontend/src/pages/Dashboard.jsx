@@ -1,7 +1,7 @@
 import  { useState, useEffect, useCallback } from 'react';
 import {
   Typography, Box, Button, CircularProgress, Alert,
-    ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment, Badge // Import Badge for notification count
+  ToggleButtonGroup, ToggleButton, Paper, Chip, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Divider, Avatar, Menu, MenuItem as MuiMenuItem, Select, TextField, InputAdornment
 } from '@mui/material';
 import { useTheme, styled } from '@mui/system';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -228,18 +228,6 @@ const Dashboard = () => {
         handleCloseMenu();
         logout();
     };
-
-    const handleNotificationClick = (event) => {
-        setNotificationAnchorEl(event.currentTarget);
-    };
-
-    const handleNotificationClose = () => {
-        setNotificationAnchorEl(null);
-    };
-
-    
-
-    
 
 
     const fetchIssuesData = async (statusFilter = 'ALL', search = '') => {
