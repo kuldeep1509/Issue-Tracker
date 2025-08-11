@@ -615,9 +615,7 @@ const Dashboard = () => {
                            
                                            
 
-                            <StyledButton variant="contained" startIcon={<AddIcon />} onClick={handleCreateIssue}>
-                                Create
-                            </StyledButton>
+                          
                             {isAuthenticated && (
                                 <Box>
                                     <IconButton

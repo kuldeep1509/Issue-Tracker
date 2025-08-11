@@ -237,8 +237,7 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                 <Button onClick={handleClose} color="primary">Close</Button>
                 {canManageIssue && (
                     <>
-                        <Button onClick={() => { handleClose(); onEdit(issue); }} color="primary" startIcon={<EditIcon />}>Edit</Button>
-                        <Button onClick={() => { handleClose(); onDelete(issue.id); }} color="error" startIcon={<DeleteIcon />}>Delete</Button>
+
                     </>
                 )}
             </DialogActions>
