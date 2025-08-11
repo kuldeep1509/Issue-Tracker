@@ -182,7 +182,7 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                             <ActionIconButton
                                 aria-label="edit"
                                 size="small"
-                                onClick={() => onEdit(issue)}
+                                onClick={e => { e.stopPropagation(); onEdit(issue); }}
                                 actiontype="edit"
                             >
                                 <EditIcon fontSize="small" />
@@ -190,7 +190,7 @@ const IssueCard = ({ issue, onEdit, onDelete }) => {
                             <ActionIconButton
                                 aria-label="delete"
                                 size="small"
-                                onClick={() => onDelete(issue.id)}
+                                onClick={e => { e.stopPropagation(); onDelete(issue.id); }}
                                 actiontype="delete"
                             >
                                 <DeleteIcon fontSize="small" />

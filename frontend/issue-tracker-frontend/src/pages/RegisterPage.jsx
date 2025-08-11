@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TextField, Button, Typography, Container, Box, Alert, CircularProgress, Avatar } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'; // Keeping this for now, but Jira's login is simpler
 import { Link, useNavigate } from 'react-router-dom';
@@ -93,12 +93,11 @@ const JiraButton = styled(Button)(({ theme }) => ({
         color: jiraLoginColors.textMuted,
     },
 }));
-
-
 const RegisterPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -219,7 +218,6 @@ const RegisterPage = () => {
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             error={formik.touched.email && Boolean(formik.errors.email)}
-                            helperText={formik.touched.email && formik.errors.email}
                         />
 
                         <JiraTextField

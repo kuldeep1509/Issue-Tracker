@@ -417,15 +417,6 @@ AUTHENTICATION_BACKENDS = (#
     
 )
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': '420584689357-tf8u7cqkqe6qdnim4rioo78mkveug4ri.apps.googleusercontent.com',
-            'secret': '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',
-            'key': ''
-        }
-    }
-}#
 
 CORS_ALLOW_HEADERS = [
     'accept',
