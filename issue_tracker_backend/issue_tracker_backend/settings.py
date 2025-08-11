@@ -274,14 +274,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'whitenoise.runserver_nostatic',
     'issues.apps.IssuesConfig',
-    'django.contrib.sites',#
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',#
+   
 ]
 
-SITE_ID = 1#
+
 
 # Middleware
 MIDDLEWARE = [
@@ -289,7 +285,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'allauth.account.middleware.AccountMiddleware',#
+    
     
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -362,7 +358,7 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
     'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': '#/activate/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': True,  # Enable activation email ##
+    
     'SEND_CONFIRMATION_EMAIL': False,
     'USER_ID_FIELD': 'username',
     'LOGIN_FIELD': 'username',
@@ -378,14 +374,7 @@ DJOSER = {
 
 #
 
-# Email backend configuration for Gmail SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your_gmail_address@gmail.com'  # <-- Replace with your Gmail address
-EMAIL_HOST_PASSWORD = 'your_gmail_app_password'   # <-- Replace with your Gmail app password
-DEFAULT_FROM_EMAIL = 'your_gmail_address@gmail.com'  # <-- Replace with your Gmail address
+
 
 # JWT configuration
 SIMPLE_JWT = {
@@ -425,7 +414,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 AUTHENTICATION_BACKENDS = (#
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    
 )
 
 SOCIALACCOUNT_PROVIDERS = {
