@@ -35,24 +35,28 @@ export const AuthProvider = ({ children }) => {
     loadUser();
     }, [loadUser]);
 
-    const login = async (username, password) => { // Expects username as per Django settings
-    try {
-    // Call Djoser's JWT create endpoint
-    const res = await api.post('/auth/jwt/create/', { username, password });
-    const { access, refresh } = res.data;
+    const login = async (username, password) => {
+        try {
+            // Call Djoser's JWT create endpoint
+            const res = await api.post('/auth/jwt/create/', { username, password });
+            const { access, refresh } = res.data;
 
-    // Store tokens in cookies
-     Cookies.set('access_token', access, { expires: 1/24, secure: process.env.NODE_ENV === 'production' }); // 1 hour expiry
-     Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' }); // 7 days expiry
+            // Store tokens in cookies
+            Cookies.set('access_token', access, { expires: 1 / 24, secure: process.env.NODE_ENV === 'production' });
+            Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' });
 
-    await loadUser(); // Fetch user details and update auth state
-    navigate('/dashboard'); // Redirect to dashboard after successful login
-    return true;
-    } catch (error) {
-    console.error("Login failed:", error.response?.data || error.message);
-    setIsAuthenticated(false);
-    return false;
-    }
+            // Directly fetch user details after login
+            const userRes = await api.get('/auth/users/me/');
+            setUser(userRes.data);
+            setIsAuthenticated(true);
+
+            navigate('/dashboard'); // Redirect to dashboard
+            return true;
+        } catch (error) {
+            console.error("Login failed:", error.response?.data || error.message);
+            setIsAuthenticated(false);
+            return false;
+        }
     };
 
     const register = async (username, email, password) => {
