@@ -193,7 +193,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .string()
             .trim()
             .nullable()
-            .max(1000, 'Description cannot exceed 1000 characters'),
+            .max(6000, 'Description cannot exceed 6000 characters (approx. 1000 words)'),
         status: yup
             .string()
             .oneOf(['OPEN', 'IN_PROGRESS', 'CLOSED'], 'Invalid status selected')
