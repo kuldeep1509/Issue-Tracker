@@ -7,83 +7,84 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);      
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true); // Initial loading state for auth check
     const navigate = useNavigate();
 
-    // Function to load user details after successful login or on app load
-    const loadUser = useCallback(async () => {
-    const accessToken = Cookies.get('access_token');
-    if (accessToken) {
-    try {
-    // Verify the token validity with the backend
-    await api.post('/auth/jwt/verify/', { token: accessToken });
-    // Fetch user details from the backend
-     const res = await api.get('/auth/users/me/');
-     setUser(res.data);
-    setIsAuthenticated(true);
-    } catch (error) {
-    console.error("Failed to load user or token invalid:", error.response?.data || error.message);
-    logout(); // Clear invalid tokens and state
-     }
-    }
-     setLoading(false); // Set loading to false once auth check is complete
-    }, []);
-
-    // Effect to check authentication status on component mount
-    useEffect(() => {
-    loadUser();
-    }, [loadUser]);
-
-    const login = async (username, password) => {
-        try {
-            // Call Djoser's JWT create endpoint
-            const res = await api.post('/auth/jwt/create/', { username, password });
-            const { access, refresh } = res.data;
-
-            // Store tokens in cookies
-            Cookies.set('access_token', access, { expires: 1 / 24, secure: process.env.NODE_ENV === 'production' });
-            Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' });
-
-            // Directly fetch user details after login
-            const userRes = await api.get('/auth/users/me/');
-            setUser(userRes.data);
-            setIsAuthenticated(true);
-
-            navigate('/dashboard'); // Redirect to dashboard
-            return true;
-        } catch (error) {
-            console.error("Login failed:", error.response?.data || error.message);
-            setIsAuthenticated(false);
-            return false;
-        }
-    };
-
-    const register = async (username, email, password) => {
-     try {
-     // Call Djoser's user registration endpoint
-     const res = await api.post('/auth/users/', { username, email, password });
-     return res.data; // Return new user data if needed (e.g., for success message)
-    } catch (error) {
-     console.error("Registration failed in AuthContext:", error.response?.data || error.message);
-    throw error; // Re-throw to allow component to catch and display specific errors
-    }
-    };
-
-    const logout = () => {
-         // Clear tokens from cookies
+    const logout = useCallback(() => {
+        // Clear tokens from cookies
         Cookies.remove('access_token');
         Cookies.remove('refresh_token');
         // Clear user state
         setUser(null);
         setIsAuthenticated(false);
         navigate('/login'); // Redirect to login page on logout
-    };
+    }, [navigate]);
+
+    // Function to load user details after successful login or on app load
+    const loadUser = useCallback(async () => {
+        const accessToken = Cookies.get('access_token');
+        if (accessToken) {
+            try {
+                // Verify the token validity with the backend
+                await api.post('/auth/jwt/verify/', { token: accessToken });
+                // Fetch user details from the backend
+                const res = await api.get('/auth/users/me/');
+                setUser(res.data);
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.error("Failed to load user or token invalid:", error.response?.data || error.message);
+                logout(); // Clear invalid tokens and state
+            }
+        }
+        setLoading(false); // Set loading to false once auth check is complete
+    }, [logout]);
+
+    // Effect to check authentication status on component mount
+    useEffect(() => {
+        loadUser();
+    }, [loadUser]);
+
+    const login = useCallback(async (username, password) => {
+        try {
+            // Call Djoser's JWT create endpoint
+            const res = await api.post('/auth/jwt/create/', { username, password });
+            const { access, refresh } = res.data;
+ 
+            // Store tokens in cookies
+            Cookies.set('access_token', access, { expires: 1 / 24, secure: process.env.NODE_ENV === 'production' });
+            Cookies.set('refresh_token', refresh, { expires: 7, secure: process.env.NODE_ENV === 'production' });
+ 
+            // Set authenticated state and redirect immediately
+            setIsAuthenticated(true);
+            navigate('/dashboard');
+ 
+            // Load user data in the background for a faster perceived login
+            await loadUser();
+ 
+            return true;
+        } catch (error) {
+            console.error("Login failed:", error.response?.data || error.message);
+            setIsAuthenticated(false);
+            return false;
+        }
+    }, [navigate, loadUser]);
+
+    const register = useCallback(async (username, email, password) => {
+        try {
+            // Call Djoser's user registration endpoint
+            const res = await api.post('/auth/users/', { username, email, password });
+            return res.data; // Return new user data if needed (e.g., for success message)
+        } catch (error) {
+            console.error("Registration failed in AuthContext:", error.response?.data || error.message);
+            throw error; // Re-throw to allow component to catch and display specific errors
+        }
+    }, []);
 
     return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout }}>
-    {children}
-    </AuthContext.Provider>
+        <AuthContext.Provider value={{ user, isAuthenticated, loading, login, register, logout }}>
+            {children}
+        </AuthContext.Provider>
     );
 };
 
