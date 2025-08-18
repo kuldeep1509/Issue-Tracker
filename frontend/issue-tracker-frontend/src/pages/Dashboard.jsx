@@ -234,7 +234,9 @@ const Dashboard = () => {
         if (!search && loading) {
              setLoading(true);
         }
-        setIsSearchLoading(true);
+        if (search) {
+           setIsSearchLoading(true);
+       }
         setError('');
         try {
             const params = {
@@ -261,7 +263,9 @@ const Dashboard = () => {
             setIssues([]);
         } finally {
             setLoading(false);
-            setIsSearchLoading(false);
+            if(search){
+              setIsSearchLoading(false)
+            }
         }
     };
 
