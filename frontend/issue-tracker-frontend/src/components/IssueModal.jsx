@@ -213,6 +213,13 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             })
             .notRequired('Assignment is optional'),
     }).test(
+        'at-least-one-assignment',
+        'Please assign this issue to either a user or a team.',
+        function (values) {
+            const { assigned_to_id, assigned_team_id } = values;
+            return assigned_to_id !== null || assigned_team_id !== null;
+        }
+    ).test(
         'assigned-mutually-exclusive',
         'Cannot assign issue to both a user and a team.',
         function (values) {
