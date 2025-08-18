@@ -203,8 +203,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .required("Assigning user is required")
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
-            })
-            .notRequired('Assignment is optional'),
+            }),
         assigned_team_id: yup
             .number()
             .nullable()
