@@ -200,7 +200,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .required('Status is required'),
         assigned_to_id: yup
             .number()
-            .nullable()
+            .required("Assigning user is required")
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
             })
