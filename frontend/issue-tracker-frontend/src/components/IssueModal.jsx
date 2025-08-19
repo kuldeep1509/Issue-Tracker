@@ -30,7 +30,7 @@ const jiraColors = {
     chipBgOpen: '#e9f2ff', // Light blue for chips (used in pre-assigned team box)
 };
 
-// --- Styled Components (Adapted           Jira-like Dialog) ---
+// --- Styled Components (Adapted       Jira-like Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
@@ -193,7 +193,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .string()
             .trim()
             .nullable()
-            .max(6000, 'Description cannot exceed 6000 characters (approx. 1000 words)'),
+            .max(6000, 'Description cannot exceed 6000 characters (approx. 1000 words)'), // Increased limit
         status: yup
             .string()
             .oneOf(['OPEN', 'IN_PROGRESS', 'CLOSED'], 'Invalid status selected')
@@ -201,7 +201,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         assigned_to_id: yup
             .number()
             .required("Assigning user is required")
-            .nullable()
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
             }),
@@ -210,9 +209,15 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .nullable()
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
-            })
-            .notRequired('Assignment is optional'),
+            }),
     }).test(
+        'at-least-one-assignment',
+        'Please assign this issue to either a user or a team.',
+        function (values) {
+            const { assigned_to_id, assigned_team_id } = values;
+            return assigned_to_id !== null || assigned_team_id !== null;
+        }
+    ).test(
         'assigned-mutually-exclusive',
         'Cannot assign issue to both a user and a team.',
         function (values) {
@@ -362,13 +367,13 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         setGeneratingDescription(true);
         setDescriptionGenerationError('');
 
-        let prompt = `Generate a concise and professional description for an issue.`;
+        let prompt = `Generate a detailed and professional description for an issue.`;
         if (formik.values.title) {
             prompt += ` The issue title is: "${formik.values.title}".`;
         } else {
             prompt += ` The user has not provided a title yet. Please provide a general template for a software bug report or feature request description.`;
         }
-        prompt += ` Focus on clarity and actionable information. Keep it under 200 words.`;
+        prompt += ` Focus on clarity and actionable information. The description should not exceed 1000 words.`;
 
         let chatHistory = [];
         chatHistory.push({ role: "user", parts: [{ text: prompt }] });
@@ -376,7 +381,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         // The apiKey is automatically provided by the Canvas environment when left as an empty string.
         // A 403 (Forbidden) error typically means the API key is missing, invalid, or lacks necessary permissions.
         // Ensure your Canvas environment is correctly configured with a valid Gemini API key.
-        const apiKey = "AIzaSyD50Lt_ubYlkTPYhMjgqbIrfeKr5L3-p7Q"; 
+        const apiKey = "AIzaSyD50Lt_ubYlkTPYhMjgqbIrfeKr5L3-p7Q";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         let retries = 0;
@@ -529,10 +534,10 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                     {canAssign && (
                         <>
                             {/* Assigned To User dropdown:
-                                - Always shown if not pre-assigned to a team.
-                                - Hidden if a team is currently selected.
+                                - **Now hidden if the 'issue' prop is present (editing an issue).**
+                                - Still hidden if a team is currently selected for a new issue.
                             */}
-                            {!isPreAssignedToTeam && !isTeamCurrentlySelected && (
+                            {!issue && !isTeamCurrentlySelected && (
                                 <JiraSelectFormControl fullWidth
                                     error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
                                 >
@@ -569,11 +574,11 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                             )}
 
                             {/* Assigned To Team dropdown:
-                                - Always shown if not pre-assigned to a user.
-                                - Hidden if a user is currently selected.
+                                - **Now hidden if the 'issue' prop is present (editing an issue).**
+                                - Still hidden if a user is currently selected for a new issue.
                                 - Also hidden if pre-assigned to a team (as it's already set).
                             */}
-                            {!isUserCurrentlySelected && !isPreAssignedToTeam && (
+                            {!issue && !isUserCurrentlySelected && !isPreAssignedToTeam && (
                                 <JiraSelectFormControl fullWidth
                                     error={formik.touched.assigned_team_id && Boolean(formik.errors.assigned_team_id)}
                                 >
@@ -620,6 +625,25 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                     </Typography>
                                 </Box>
                             )}
+
+                            {/* Display current user/team assignment when editing */}
+                            {issue && (
+                                <Box sx={{ mb: 2, p: 1.5, border: `1px dashed ${jiraColors.primaryBlue}`, borderRadius: '3px', backgroundColor: jiraColors.chipBgOpen }}>
+                                    {issue.assigned_to && (
+                                        <Typography variant="body2" sx={{ color: jiraColors.textDark, fontWeight: 600 }}>
+                                            Currently Assigned to User: {issue.assigned_to.username}
+                                        </Typography>
+                                    )}
+                                    {issue.assigned_team && (
+                                        <Typography variant="body2" sx={{ color: jiraColors.textDark, fontWeight: 600 }}>
+                                            Currently Assigned to Team: {issue.assigned_team.name}
+                                        </Typography>
+                                    )}
+                                    <Typography variant="caption" sx={{ color: jiraColors.textMuted }}>
+                                        Assignment cannot be changed from this modal.
+                                    </Typography>
+                                </Box>
+                            )}
                         </>
                     )}
                 </Box>
@@ -631,7 +655,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 <JiraButton
                     onClick={formik.handleSubmit}
                     variant="contained"
-                    
+                    disabled={loading || generatingDescription || !formik.isValid || !formik.dirty}
                 >
                     {loading ? <CircularProgress size={20} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
                 </JiraButton>
