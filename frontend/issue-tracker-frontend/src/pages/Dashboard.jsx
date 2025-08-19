@@ -435,51 +435,129 @@ const Dashboard = () => {
 
         const isActive = isOver && canDrop;
         return (
-            <StyledKanbanColumnBox
-                ref={drop}
-                isActive={isActive}
-                canDrop={canDrop}
-                sx={{
-                    flex: '1 1 300px',
-                    minWidth: { xs: '100%', sm: '280px', md: '300px' },
-                    maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` },
-                    boxSizing: 'border-box',
-                }}
-            >
-                <StyledColumnHeader align="center">
-                    {getColumnTitle(status)} ({issues.length})
-                </StyledColumnHeader>
+        <StyledKanbanColumnBox
+            ref={drop}
+            isActive={isActive}
+            canDrop={canDrop}
+            sx={{
+                flex: '1 1 300px',
+                minWidth: { xs: '100%', sm: '280px', md: '300px' },
+                maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` },
+                boxSizing: 'border-box',
+                backgroundColor: canDrop ? '#f0f4ff' : '#ffffff',
+                border: isActive ? '2px solid #0052cc' : '2px solid #e1e4e8',
+                borderRadius: '12px',
+                p: 2,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease-in-out',
+                minHeight: '200px',
+                display: 'flex',
+                flexDirection: 'column',
+                '&:hover': {
+                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.1)',
+                },
+                '&.is-active': {
+                    backgroundColor: '#dcebff',
+                },
+            }}
+        >
+            {/* Column Header */}
+            <StyledColumnHeader align="left" sx={{
+                mb: 2,
+                pb: 1,
+                borderBottom: '1px solid #e1e4e8',
+                fontWeight: 700,
+                fontSize: '1rem',
+                color: '#24292e',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+            }}>
+                <span>{getColumnTitle(status)}</span>
+                <span style={{ fontSize: '0.9rem', color: '#586069', fontWeight: 500 }}>
+                    ({issues.length})
+                </span>
+            </StyledColumnHeader>
+        
+            {/* Issues Container */}
+            <Box sx={{
+                flexGrow: 1,
+                overflowY: 'auto',
+                // Refined scrollbar styling
+                '&::-webkit-scrollbar': {
+                    width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(0,0,0,.15)',
+                    borderRadius: '4px',
+                    border: '2px solid transparent',
+                    backgroundClip: 'content-box',
+                },
+            }}>
                 {issues.length === 0 && !isActive ? (
-                    <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
-                        No issues here.
-                    </Typography>
+                    <Box
+                        sx={{
+                            my: 2,
+                            p: 2,
+                            border: '2px dashed #dce1e6', // Dashed border for visual emphasis
+                            borderRadius: '8px',
+                            backgroundColor: '#fafbfc',
+                        }}
+                    >
+                        <Typography variant="body2" align="center" sx={{ fontStyle: 'italic', color: '#586069' }}>
+                            No issues here. Drag and drop to add or click the button below.
+                        </Typography>
+                    </Box>
                 ) : (
                     issues.map((issue) => (
-                        <IssueCard
+                        <Box
                             key={issue.id}
-                            issue={issue}
-                            onEdit={handleEditIssue}
-                            onDelete={handleDeleteIssue}
-                        />
+                            sx={{
+                                my: 1, // Vertical margin for spacing between cards
+                                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)', // Lift card slightly on hover
+                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                                },
+                            }}
+                        >
+                            <IssueCard
+                                issue={issue}
+                                onEdit={handleEditIssue}
+                                onDelete={handleDeleteIssue}
+                            />
+                        </Box>
                     ))
                 )}
-                 <Button
-                    variant="text"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleCreateIssueInColumn(status)}
-                    sx={{
-                        mt: 2,
-                        textTransform: 'none',
-                        color: jiraColors.textMuted,
-                        '&:hover': {
-                            backgroundColor: jiraColors.boardBg,
-                            color: jiraColors.textDark,
-                        },
-                    }}
-                >
-                    Create issue
-                </Button>
-            </StyledKanbanColumnBox>
+            </Box>
+        
+            {/* Create Issue Button */}
+            <Button
+                variant="text"
+                startIcon={<AddIcon />}
+                onClick={() => handleCreateIssueInColumn(status)}
+                sx={{
+                    mt: 2,
+                    textTransform: 'none',
+                    color: '#586069',
+                    fontWeight: 500,
+                    fontSize: '0.9rem',
+                    '&:hover': {
+                        backgroundColor: 'rgba(94, 108, 132, 0.08)',
+                        color: '#24292e',
+                    },
+                    alignSelf: 'flex-start',
+                    transition: 'all 0.2s ease-in-out',
+                }}
+            >
+                Create issue
+            </Button>
+        </StyledKanbanColumnBox>
         );
     };
 
