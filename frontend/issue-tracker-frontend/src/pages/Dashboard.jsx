@@ -931,22 +931,15 @@ const Dashboard = () => {
                                     />
                                 </form>
                             </Box>
-                          <Box
-                              sx={{
-                                  height: 'calc(100vh - 250px)', // Sets a fixed height for the board area
-                                  overflowY: 'auto',              // Enables vertical scrolling only if content overflows
-                                  overflowX: 'hidden',            // Prevents a horizontal scrollbar from this wrapper
-                              }}
-                          >
+                          
 
                             <Box
                                 sx={{
                                     display: 'flex',
                                     flexWrap: 'nowrap',
                                     gap: theme.spacing(2),
-                                    height: '100%',
+                                    overflowX: 'auto',
                                     pb: 2,
-                                  
                                     justifyContent: 'flex-start',
                                 }}
                             >
@@ -959,7 +952,7 @@ const Dashboard = () => {
                                     />
                                 ))}
                             </Box>
-                            </Box>
+                            
                         </Box>
                     )}
 
