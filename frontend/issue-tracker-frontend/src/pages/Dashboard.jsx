@@ -93,8 +93,7 @@ const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
   display: 'flex',
   flexDirection: 'column',
   // critical for flex items to not overflow their parent:
-  minHeight: 0,
-  minWidth: 0,
+  
 
   // clip everything
   overflow: 'hidden',
@@ -102,7 +101,7 @@ const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
 
   // keep your existing spacing fallbacks
   paddingTop: theme.spacing ? theme.spacing(10) : '80px',
-  paddingBottom: theme.spacing ? theme.spacing(3) : '24px',
+  paddingBottom: theme.spacing(3),
 
   marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
   transition: theme.transitions
