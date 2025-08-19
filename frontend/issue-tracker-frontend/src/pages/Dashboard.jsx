@@ -66,7 +66,7 @@ const collapsedDrawerWidth = 60;
 const RootContainer = styled(Box)({     
   display: 'flex',     
   height: '100vh',     
-  overflowY: 'hidden',     
+  overflowY: 'auto',     
   backgroundColor: jiraColors.boardBg, 
 });
 
@@ -93,7 +93,7 @@ const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
-    overflowY: 'hidden',
+    overflowY: 'auto',
     paddingTop: theme.spacing ? theme.spacing(10) : '80px',
     paddingBottom: theme.spacing(3),
     marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
