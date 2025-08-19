@@ -63,11 +63,11 @@ const jiraColors = {
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 60;
 
-const RootContainer = styled(Box)({
-    display: 'flex',
-    height: '100vh',
-    position: 'fixed',
-    backgroundColor: jiraColors.boardBg,
+const RootContainer = styled(Box)({     
+  display: 'flex',     
+  height: '100vh',     
+  overflowY: 'hidden',     
+  backgroundColor: jiraColors.boardBg, 
 });
 
 const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
@@ -87,18 +87,26 @@ const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
     },
 }));
 
+// 3) MainContent: prevent flex overflow + include padding in height
 const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
-  flexGrow: 1,
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
-  height: '100vh',
+  // critical for flex items to not overflow their parent:
   minHeight: 0,
+  minWidth: 0,
+
+  // clip everything
   overflow: 'hidden',
+  boxSizing: 'border-box',
+
+  // keep your existing spacing fallbacks
   paddingTop: theme.spacing ? theme.spacing(10) : '80px',
-  paddingBottom: theme.spacing(3),
-  width: `calc(100vw - ${sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth}px)`,
+  paddingBottom: theme.spacing ? theme.spacing(3) : '24px',
+
+  marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
   transition: theme.transitions
-    ? theme.transitions.create(['width'], {
+    ? theme.transitions.create(['margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
       })
@@ -111,9 +119,10 @@ const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
   [theme.breakpoints.down('md')]: {
     paddingLeft: theme.spacing(3),
     paddingRight: theme.spacing(3),
-    width: '100vw',
+    marginLeft: 0,
   },
 }));
+
 
 const StyledButton = styled(Button)(({ variant }) => ({
     borderRadius: '3px',
@@ -166,7 +175,7 @@ const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
     minHeight: '400px',
     display: 'flex',
     flexDirection: 'column',
-    overflow: "auto",
+    
     gap: theme.spacing(1),
     boxShadow: '0 1px 2px rgba(5, 5, 5, 0.05)',
     transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
