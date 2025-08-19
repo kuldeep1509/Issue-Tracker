@@ -648,7 +648,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 <JiraButton
                     onClick={formik.handleSubmit}
                     variant="contained"
-                    disabled={loading || generatingDescription || !formik.isValid || !formik.dirty}
+                    
                 >
                     {loading ? <CircularProgress size={20} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
                 </JiraButton>
