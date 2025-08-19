@@ -530,41 +530,44 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                 - **Now hidden if the 'issue' prop is present (editing an issue).**
                                 - Still hidden if a team is currently selected for a new issue.
                             */}
-                            {!issue && !isTeamCurrentlySelected && (
-                                <JiraSelectFormControl fullWidth
-                                    error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
-                                >
-                                    <InputLabel id="assigned-to-label">Assigned To User</InputLabel>
-                                    <Select
-                                        labelId="assigned-to-label"
-                                        id="assigned_to_id"
-                                        name="assigned_to_id"
-                                        value={formik.values.assigned_to_id}
-                                        label="Assigned To User"
-                                        onChange={(e) => {
-                                            formik.handleChange(e);
-                                            // If a user is selected, clear assigned_team_id
-                                            if (e.target.value !== 'NONE') {
-                                                formik.setFieldValue('assigned_team_id', 'NONE');
-                                            }
-                                        }}
-                                        onBlur={formik.handleBlur}
-                                        displayEmpty
-                                    >
-                                        <MenuItem value="NONE">
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {users.map(u => (
-                                            <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
-                                        ))}
-                                    </Select>
-                                    {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
-                                        <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
-                                            {formik.errors.assigned_to_id}
-                                        </Typography>
-                                    )}
-                                </JiraSelectFormControl>
-                            )}
+                    {
+                      !issue && (
+                        <JiraSelectFormControl
+                          fullWidth
+                          error={formik.touched.assigned_team_id && Boolean(formik.errors.assigned_team_id)}
+                        >
+                          <InputLabel id="assigned-team-label">Assigned To Team</InputLabel>
+                          <Select
+                            labelId="assigned-team-label"
+                            id="assigned_team_id"
+                            name="assigned_team_id"
+                            value={formik.values.assigned_team_id}
+                            label="Assigned To Team"
+                            onChange={(e) => {
+                              formik.handleChange(e);
+                              // If a team is selected, clear assigned_to_id
+                              if (e.target.value !== 'NONE') {
+                                formik.setFieldValue('assigned_to_id', 'NONE');
+                              }
+                            }}
+                            onBlur={formik.handleBlur}
+                            displayEmpty
+                          >
+                            <MenuItem value="NONE">
+                              <em>None</em>
+                            </MenuItem>
+                            {Array.isArray(teams) && teams.map(t => (
+                              <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
+                            ))}
+                          </Select>
+                          {formik.touched.assigned_team_id && formik.errors.assigned_team_id && (
+                            <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                              {formik.errors.assigned_team_id}
+                            </Typography>
+                          )}
+                        </JiraSelectFormControl>
+                      )
+                    }
 
                             {/* Assigned To Team dropdown:
                                 - **Now hidden if the 'issue' prop is present (editing an issue).**
