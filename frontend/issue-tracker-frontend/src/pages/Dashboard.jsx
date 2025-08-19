@@ -542,27 +542,99 @@ const Dashboard = () => {
                 </IconButton>
             </Toolbar>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-            <List sx={{ flexGrow: 1 }}>
-                <ListItem button onClick={() => { setViewMode('board'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
-                    <DashboardIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
-                    {sidebarOpen && <ListItemText primary="Board" sx={{ color: jiraColors.sidebarText }} />}
-                </ListItem>
-                <ListItem button onClick={() => { setViewMode('teams'); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
-                    <GroupIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
-                    {sidebarOpen && <ListItemText primary="Teams" sx={{ color: jiraColors.sidebarText }} />}
-                </ListItem>
-                {user?.is_staff && (
-                    <ListItem button onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
-                        <PersonAddIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
-                        {sidebarOpen && <ListItemText primary="Invite User" sx={{ color: jiraColors.sidebarText }} />}
-                    </ListItem>
-                )}
-                <ListItem button onClick={() => { setViewMode('allIssues'); setMobileOpen(false); setFilterStatus('ALL'); setSearchQuery(''); }} sx={{ '&:hover': { backgroundColor: jiraColors.sidebarHover }, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
-                    <BugReportIcon sx={{ color: jiraColors.sidebarText, mr: sidebarOpen ? 2 : 0 }} />
-                    {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: jiraColors.sidebarText }} />}
-                </ListItem>
-               
-            </List>
+    <List sx={{ flexGrow: 1 }}>
+    <ListItem
+        button
+        onClick={() => { setViewMode('board'); setMobileOpen(false); }}
+        sx={{
+            py: 1.5,
+            justifyContent: sidebarOpen ? 'flex-start' : 'center',
+            backgroundColor: viewMode === 'board' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            borderLeft: viewMode === 'board' ? '3px solid #d5e7d6ff' : 'none',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                transform: 'translateX(4px)',
+                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+            },
+            borderRadius: '4px',
+            '&.Mui-selected': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                borderLeft: '3px solid #bcc4bcff',
+            }
+        }}
+    >
+        <DashboardIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
+        {sidebarOpen && <ListItemText primary="Board" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+    </ListItem>
+
+    <ListItem
+        button
+        onClick={() => { setViewMode('teams'); setMobileOpen(false); }}
+        sx={{
+            py: 1.5,
+            justifyContent: sidebarOpen ? 'flex-start' : 'center',
+            backgroundColor: viewMode === 'teams' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            borderLeft: viewMode === 'teams' ? '3px solid #c7d3c7ff' : 'none',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                transform: 'translateX(4px)',
+                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+            },
+            borderRadius: '4px',
+            '&.Mui-selected': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                borderLeft: '3px solid #d8e7d9ff',
+            }
+        }}
+    >
+        <GroupIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
+        {sidebarOpen && <ListItemText primary="Teams" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+    </ListItem>
+
+    {user?.is_staff && (
+        <ListItem
+            button
+            onClick={() => { setOpenInviteModal(true); setMobileOpen(false); }}
+            sx={{
+                py: 1.5,
+                justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    transform: 'translateX(4px)',
+                    transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+                },
+                borderRadius: '4px',
+            }}
+        >
+            <PersonAddIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
+            {sidebarOpen && <ListItemText primary="Invite User" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+        </ListItem>
+    )}
+
+    <ListItem
+        button
+        onClick={() => { setViewMode('allIssues'); setMobileOpen(false); setFilterStatus('ALL'); setSearchQuery(''); }}
+        sx={{
+            py: 1.5,
+            justifyContent: sidebarOpen ? 'flex-start' : 'center',
+            backgroundColor: viewMode === 'allIssues' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+            borderLeft: viewMode === 'allIssues' ? '3px solid #e9f0eaff' : 'none',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                transform: 'translateX(4px)',
+                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+            },
+            borderRadius: '4px',
+            '&.Mui-selected': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                borderLeft: '3px solid #cbdfcbff',
+            }
+        }}
+    >
+        <BugReportIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
+        {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+    </ListItem>
+</List>
         </Box>
     );
 
