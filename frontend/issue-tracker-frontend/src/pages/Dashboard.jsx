@@ -66,7 +66,7 @@ const collapsedDrawerWidth = 60;
 const RootContainer = styled(Box)({
     display: 'flex',
     height: '100vh',
-    overflow: 'hidden',
+    position: 'fixed',
     backgroundColor: jiraColors.boardBg,
 });
 
@@ -88,27 +88,31 @@ const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
 }));
 
 const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    overflowY: 'auto',
-    paddingTop: theme.spacing ? theme.spacing(10) : '80px',
-    paddingBottom: theme.spacing(3),
-    marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
-    transition: theme.transitions ? theme.transitions.create(['width', 'margin'], {
+  flexGrow: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100vh',
+  minHeight: 0,
+  overflow: 'hidden',
+  paddingTop: theme.spacing ? theme.spacing(10) : '80px',
+  paddingBottom: theme.spacing(3),
+  width: `calc(100vw - ${sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth}px)`,
+  transition: theme.transitions
+    ? theme.transitions.create(['width'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
-    }) : 'none',
-    [theme.breakpoints.up('md')]: {
-        paddingLeft: theme.spacing(4),
-        paddingRight: theme.spacing(4),
-    },
-    [theme.breakpoints.down('md')]: {
-        paddingLeft: theme.spacing(3),
-        paddingRight: theme.spacing(3),
-        marginLeft: 0,
-    }
+      })
+    : 'none',
+
+  [theme.breakpoints.up('md')]: {
+    paddingLeft: theme.spacing(4),
+    paddingRight: theme.spacing(4),
+  },
+  [theme.breakpoints.down('md')]: {
+    paddingLeft: theme.spacing(3),
+    paddingRight: theme.spacing(3),
+    width: '100vw',
+  },
 }));
 
 const StyledButton = styled(Button)(({ variant }) => ({
