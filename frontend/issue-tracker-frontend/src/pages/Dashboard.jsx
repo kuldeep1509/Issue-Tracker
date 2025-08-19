@@ -89,37 +89,27 @@ const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
 
 // 3) MainContent: prevent flex overflow + include padding in height
 const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  // critical for flex items to not overflow their parent:
-  
-
-  // clip everything
-  overflow: 'hidden',
-  boxSizing: 'border-box',
-
-  // keep your existing spacing fallbacks
-  paddingTop: theme.spacing ? theme.spacing(10) : '80px',
-  paddingBottom: theme.spacing(3),
-
-  marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
-  transition: theme.transitions
-    ? theme.transitions.create(['margin'], {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    overflowY: 'hidden',
+    paddingTop: theme.spacing ? theme.spacing(10) : '80px',
+    paddingBottom: theme.spacing(3),
+    marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
+    transition: theme.transitions ? theme.transitions.create(['width', 'margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
-      })
-    : 'none',
-
-  [theme.breakpoints.up('md')]: {
-    paddingLeft: theme.spacing(4),
-    paddingRight: theme.spacing(4),
-  },
-  [theme.breakpoints.down('md')]: {
-    paddingLeft: theme.spacing(3),
-    paddingRight: theme.spacing(3),
-    marginLeft: 0,
-  },
+    }) : 'none',
+    [theme.breakpoints.up('md')]: {
+        paddingLeft: theme.spacing(4),
+        paddingRight: theme.spacing(4),
+    },
+    [theme.breakpoints.down('md')]: {
+        paddingLeft: theme.spacing(3),
+        paddingRight: theme.spacing(3),
+        marginLeft: 0,
+    }
 }));
 
 
