@@ -640,7 +640,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                         </Typography>
                                     )}
                                     <Typography variant="caption" sx={{ color: jiraColors.textMuted }}>
-                                        Assignment cannot be changed from this modal.
+                                        Assignment cannot be changed from this form.
                                     </Typography>
                                 </Box>
                             )}
