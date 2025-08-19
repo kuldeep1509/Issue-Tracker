@@ -1,13 +1,12 @@
-// src/components/IssueModal.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Typography,
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Select, MenuItem, FormControl, InputLabel,
-    CircularProgress, Box, Alert, Avatar, InputAdornment // Import InputAdornment
+    CircularProgress, Box, Alert, Avatar, InputAdornment
 } from '@mui/material';
 import EditNoteIcon from '@mui/icons-material/EditNote';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'; // Icon for AI generation
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFormik } from 'formik';
@@ -16,29 +15,29 @@ import { styled, useTheme } from '@mui/system';
 
 // --- Jira-like Color Palette Definition (Consistent with other components) ---
 const jiraColors = {
-    primaryBlue: '#0052cc', // Jira's main blue for buttons, links, focus
-    primaryBlueDark: '#0065ff', // Darker blue for hover
-    backgroundLight: '#f4f5f7', // Light grey background, similar to Jira's board
-    backgroundMedium: '#dfe1e6', // Slightly darker grey for borders/subtle elements
-    textDark: '#172b4d', // Dark text for headings and primary content
-    textMuted: '#5e6c84', // Muted grey for secondary text
+    primaryBlue: '#0052cc',
+    primaryBlueDark: '#0065ff',
+    backgroundLight: '#f4f5f7',
+    backgroundMedium: '#dfe1e6',
+    textDark: '#172b4d',
+    textMuted: '#5e6c84',
     white: '#ffffff',
-    shadow: 'rgba(0, 0, 0, 0.1)', // Subtle shadow
-    errorRed: '#de350b', // Jira's error red
-    cancelButtonText: '#5e6c84', // Muted grey for cancel button text
-    cancelButtonHoverBg: 'rgba(94, 108, 132, 0.08)', // Subtle grey hover for cancel button
-    chipBgOpen: '#e9f2ff', // Light blue for chips (used in pre-assigned team box)
+    shadow: 'rgba(0, 0, 0, 0.1)',
+    errorRed: '#de350b',
+    cancelButtonText: '#5e6c84',
+    cancelButtonHoverBg: 'rgba(94, 108, 132, 0.08)',
+    chipBgOpen: '#e9f2ff',
 };
 
-// --- Styled Components (Adapted       Jira-like Dialog) ---
+// --- Styled Components (Adapted to Jira-like Dialog) ---
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
         backgroundColor: jiraColors.white,
-        borderRadius: '3px', // Jira-like rounded corners
+        borderRadius: '3px',
         boxShadow: `0 4px 8px ${jiraColors.shadow}`,
         border: `1px solid ${jiraColors.backgroundMedium}`,
-        padding: theme.spacing(2), // Consistent padding
+        padding: theme.spacing(2),
     },
 }));
 
@@ -46,31 +45,31 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
     textAlign: 'center',
     paddingBottom: theme.spacing(1),
     color: jiraColors.textDark,
-    fontWeight: 600, // Slightly less bold for titles
-    fontSize: '1.5rem', // Smaller title font size
-    borderBottom: `1px solid ${jiraColors.backgroundMedium}`, // Separator line
+    fontWeight: 600,
+    fontSize: '1.5rem',
+    borderBottom: `1px solid ${jiraColors.backgroundMedium}`,
     marginBottom: theme.spacing(2),
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
     padding: theme.spacing(3),
-    paddingTop: theme.spacing(1), // Adjust top padding after title
+    paddingTop: theme.spacing(1),
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
     padding: theme.spacing(2),
     paddingTop: theme.spacing(1),
-    justifyContent: 'flex-end', // Align buttons to the right
-    borderTop: `1px solid ${jiraColors.backgroundMedium}`, // Separator line
+    justifyContent: 'flex-end',
+    borderTop: `1px solid ${jiraColors.backgroundMedium}`,
     marginTop: theme.spacing(2),
-    gap: theme.spacing(1), // Space between buttons
+    gap: theme.spacing(1),
 }));
 
 const JiraTextField = styled(TextField)(({ theme }) => ({
-    marginBottom: theme.spacing(2), // Consistent vertical margin
+    marginBottom: theme.spacing(2),
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '3px', // Match Jira's input field corners
+        borderRadius: '3px',
         '& fieldset': {
             borderColor: jiraColors.backgroundMedium,
         },
@@ -83,7 +82,7 @@ const JiraTextField = styled(TextField)(({ theme }) => ({
         },
     },
     '& .MuiInputBase-input': {
-        padding: '12px 14px', // Standard input padding
+        padding: '12px 14px',
         color: jiraColors.textDark,
     },
     '& .MuiInputLabel-root': {
@@ -100,10 +99,10 @@ const JiraTextField = styled(TextField)(({ theme }) => ({
 }));
 
 const JiraSelectFormControl = styled(FormControl)(({ theme }) => ({
-    marginBottom: theme.spacing(2), // Consistent vertical margin
+    marginBottom: theme.spacing(2),
 
     '& .MuiOutlinedInput-root': {
-        borderRadius: '3px', // Match Jira's input field corners
+        borderRadius: '3px',
         '& fieldset': {
             borderColor: jiraColors.backgroundMedium,
         },
@@ -116,7 +115,7 @@ const JiraSelectFormControl = styled(FormControl)(({ theme }) => ({
         },
     },
     '& .MuiInputBase-input': {
-        padding: '12px 14px', // Consistent input padding
+        padding: '12px 14px',
         color: jiraColors.textDark,
     },
     '& .MuiInputLabel-root': {
@@ -137,10 +136,10 @@ const JiraButton = styled(Button)(({ theme }) => ({
     backgroundColor: jiraColors.primaryBlue,
     color: jiraColors.white,
     borderRadius: '3px',
-    height: 40, // Standard button height
-    fontWeight: 600, // Bolder text
+    height: 40,
+    fontWeight: 600,
     fontSize: '0.95rem',
-    textTransform: 'none', // Jira buttons are not all caps
+    textTransform: 'none',
     transition: 'background-color 0.2s ease-in-out',
     '&:hover': {
         backgroundColor: jiraColors.primaryBlueDark,
@@ -161,7 +160,7 @@ const CancelButton = styled(Button)(({ theme }) => ({
     transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
     '&:hover': {
         backgroundColor: jiraColors.cancelButtonHoverBg,
-        color: jiraColors.textDark, // Darker text on hover
+        color: jiraColors.textDark,
     },
     '&:disabled': {
         color: jiraColors.textMuted,
@@ -176,12 +175,11 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [generatingDescription, setGeneratingDescription] = useState(false); // New state for description generation loading
-    const [descriptionGenerationError, setDescriptionGenerationError] = useState(''); // New state for description generation error
-    const theme = useTheme(); // Use theme hook
+    const [generatingDescription, setGeneratingDescription] = useState(false);
+    const [descriptionGenerationError, setDescriptionGenerationError] = useState('');
+    const theme = useTheme();
 
-    // Determine if the modal is opened specifically for pre-assigning to a team
-    const isPreAssignedToTeam = !!initialAssignedTeam && !issue; // Only true if creating new and team is provided
+    const isPreAssignedToTeam = !!initialAssignedTeam && !issue;
 
     const validationSchema = yup.object().shape({
         title: yup
@@ -193,14 +191,14 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             .string()
             .trim()
             .nullable()
-            .max(10000, 'Description cannot exceed 10000 characters (approx. 1000 words)'), // Increased limit
+            .max(10000, 'Description cannot exceed 10000 characters (approx. 1000 words)'),
         status: yup
             .string()
             .oneOf(['OPEN', 'IN_PROGRESS', 'CLOSED'], 'Invalid status selected')
             .required('Status is required'),
         assigned_to_id: yup
             .number()
-            .required("Assigning user is required")
+            .nullable()
             .transform((value, originalValue) => {
                 return originalValue === 'NONE' || originalValue === '' ? null : value;
             }),
@@ -218,6 +216,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
             if (assigned_to_id !== null && assigned_team_id !== null) {
                 return false;
             }
+            // Allow one or neither to be assigned.
             return true;
         }
     );
@@ -286,7 +285,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
 
     useEffect(() => {
         if (open) {
-            formik.resetForm(); // Always reset form first
+            formik.resetForm();
             if (issue) {
                 formik.setValues({
                     title: issue.title,
@@ -305,7 +304,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 }, false);
             }
             setError('');
-            setDescriptionGenerationError(''); // Clear description generation error on open
+            setDescriptionGenerationError('');
         }
     }, [issue, open, initialAssignedTeam]);
 
@@ -323,18 +322,17 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         if (!open) return;
         try {
             const response = await api.get('teams/');
-            // Corrected: Ensure response.data is an array or has a results array
             if (Array.isArray(response.data)) {
                 setTeams(response.data);
             } else if (response.data && Array.isArray(response.data.results)) {
                 setTeams(response.data.results);
             } else {
                 console.warn("Unexpected API response structure for teams:", response.data);
-                setTeams([]); // Ensure it's always an array
+                setTeams([]);
             }
         } catch (err) {
             console.error("Failed to fetch teams for assignment:", err.response?.data || err.message);
-            setTeams([]); // Ensure it's always an array on error too
+            setTeams([]);
         }
     }, [open]);
 
@@ -352,7 +350,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
 
     const canAssign = !!currentUser;
 
-    // Determine if a user or team is currently selected (not 'NONE' or null)
     const isUserCurrentlySelected = formik.values.assigned_to_id !== 'NONE' && formik.values.assigned_to_id !== null;
     const isTeamCurrentlySelected = formik.values.assigned_team_id !== 'NONE' && formik.values.assigned_team_id !== null;
 
@@ -371,15 +368,12 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
         let chatHistory = [];
         chatHistory.push({ role: "user", parts: [{ text: prompt }] });
         const payload = { contents: chatHistory };
-        // The apiKey is automatically provided by the Canvas environment when left as an empty string.
-        // A 403 (Forbidden) error typically means the API key is missing, invalid, or lacks necessary permissions.
-        // Ensure your Canvas environment is correctly configured with a valid Gemini API key.
         const apiKey = "AIzaSyD50Lt_ubYlkTPYhMjgqbIrfeKr5L3-p7Q";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         let retries = 0;
         const maxRetries = 3;
-        const baseDelay = 1000; // 1 second
+        const baseDelay = 1000;
 
         while (retries < maxRetries) {
             try {
@@ -390,10 +384,9 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                 });
 
                 if (!response.ok) {
-                    // If the status is 403, it's likely an API key issue, no need to retry
                     if (response.status === 403) {
                         setDescriptionGenerationError('Permission denied: Please ensure a valid Gemini API key is configured in your environment.');
-                        throw new Error('API Key Forbidden (403)'); // Break out of retry loop
+                        throw new Error('API Key Forbidden (403)');
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -404,14 +397,14 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                     result.candidates[0].content.parts.length > 0) {
                     const text = result.candidates[0].content.parts[0].text;
                     formik.setFieldValue('description', text);
-                    break; // Exit loop on success
+                    break;
                 } else {
                     throw new Error('Unexpected API response structure or no content.');
                 }
             } catch (err) {
                 console.error('Error generating description:', err);
                 if (err.message === 'API Key Forbidden (403)') {
-                    break; // Do not retry for 403 errors
+                    break;
                 }
                 if (retries < maxRetries - 1) {
                     const delay = baseDelay * Math.pow(2, retries);
@@ -443,7 +436,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                     <JiraTextField
                         autoFocus
                         label="Title"
-                        style={{marginTop: "5px"}}
+                        style={{ marginTop: "5px" }}
                         type="text"
                         fullWidth
                         name="title"
@@ -467,7 +460,7 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                         onBlur={formik.handleBlur}
                         error={formik.touched.description && Boolean(formik.errors.description)}
                         helperText={formik.touched.description && formik.errors.description}
-                        InputProps={{ // Add InputProps to attach the button
+                        InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
                                     <Button
@@ -482,8 +475,8 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                                 backgroundColor: 'transparent',
                                                 textDecoration: 'underline',
                                             },
-                                            minWidth: 'auto', // Allow button to shrink
-                                            padding: '4px 8px', // Adjust padding
+                                            minWidth: 'auto',
+                                            padding: '4px 8px',
                                         }}
                                     >
                                         {generatingDescription ? (
@@ -523,60 +516,49 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                         )}
                     </JiraSelectFormControl>
 
-                    {/* Conditionally render assignment fields based on context */}
                     {canAssign && (
                         <>
-                            {/* Assigned To User dropdown:
-                                - **Now hidden if the 'issue' prop is present (editing an issue).**
-                                - Still hidden if a team is currently selected for a new issue.
-                            */}
-                    {
-                      !issue && (
-                        <JiraSelectFormControl
-                          fullWidth
-                          error={formik.touched.assigned_team_id && Boolean(formik.errors.assigned_team_id)}
-                        >
-                          <InputLabel id="assigned-team-label">Assigned To Team</InputLabel>
-                          <Select
-                            labelId="assigned-team-label"
-                            id="assigned_team_id"
-                            name="assigned_team_id"
-                            value={formik.values.assigned_team_id}
-                            label="Assigned To Team"
-                            onChange={(e) => {
-                              formik.handleChange(e);
-                              // If a team is selected, clear assigned_to_id
-                              if (e.target.value !== 'NONE') {
-                                formik.setFieldValue('assigned_to_id', 'NONE');
-                              }
-                            }}
-                            onBlur={formik.handleBlur}
-                            displayEmpty
-                          >
-                            <MenuItem value="NONE">
-                              <em>None</em>
-                            </MenuItem>
-                            {Array.isArray(teams) && teams.map(t => (
-                              <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
-                            ))}
-                          </Select>
-                          {formik.touched.assigned_team_id && formik.errors.assigned_team_id && (
-                            <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
-                              {formik.errors.assigned_team_id}
-                            </Typography>
-                          )}
-                        </JiraSelectFormControl>
-                      )
-                    }
+                            {!issue && !isPreAssignedToTeam && (
+                                <JiraSelectFormControl fullWidth
+                                    error={formik.touched.assigned_to_id && Boolean(formik.errors.assigned_to_id)}
+                                    disabled={isTeamCurrentlySelected}
+                                >
+                                    <InputLabel id="assigned-to-label">Assigned To User</InputLabel>
+                                    <Select
+                                        labelId="assigned-to-label"
+                                        id="assigned_to_id"
+                                        name="assigned_to_id"
+                                        value={formik.values.assigned_to_id}
+                                        label="Assigned To User"
+                                        onChange={(e) => {
+                                            formik.handleChange(e);
+                                            if (e.target.value !== 'NONE') {
+                                                formik.setFieldValue('assigned_team_id', 'NONE');
+                                            }
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="NONE">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {users.map(u => (
+                                            <MenuItem key={u.id} value={u.id}>{u.username}</MenuItem>
+                                        ))}
+                                    </Select>
+                                    {formik.touched.assigned_to_id && formik.errors.assigned_to_id && (
+                                        <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                            {formik.errors.assigned_to_id}
+                                        </Typography>
+                                    )}
+                                </JiraSelectFormControl>
+                            )}
 
-                            {/* Assigned To Team dropdown:
-                                - **Now hidden if the 'issue' prop is present (editing an issue).**
-                                - Still hidden if a user is currently selected for a new issue.
-                                - Also hidden if pre-assigned to a team (as it's already set).
-                            */}
-                            {!issue && !isUserCurrentlySelected && !isPreAssignedToTeam && (
+                            {/* **FIXED** - Removed redundant conditions, now only visible for new issues */}
+                            {!issue && !isPreAssignedToTeam && (
                                 <JiraSelectFormControl fullWidth
                                     error={formik.touched.assigned_team_id && Boolean(formik.errors.assigned_team_id)}
+                                    disabled={isUserCurrentlySelected}
                                 >
                                     <InputLabel id="assigned-team-label">Assigned To Team</InputLabel>
                                     <Select
@@ -587,7 +569,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                         label="Assigned To Team"
                                         onChange={(e) => {
                                             formik.handleChange(e);
-                                            // If a team is selected, clear assigned_to_id
                                             if (e.target.value !== 'NONE') {
                                                 formik.setFieldValue('assigned_to_id', 'NONE');
                                             }
@@ -610,7 +591,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                 </JiraSelectFormControl>
                             )}
 
-                            {/* Display pre-assigned team if applicable */}
                             {isPreAssignedToTeam && (
                                 <Box sx={{ mb: 2, p: 1.5, border: `1px dashed ${jiraColors.primaryBlue}`, borderRadius: '3px', backgroundColor: jiraColors.chipBgOpen }}>
                                     <Typography variant="body2" sx={{ color: jiraColors.textDark, fontWeight: 600 }}>
@@ -622,7 +602,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                                 </Box>
                             )}
 
-                            {/* Display current user/team assignment when editing */}
                             {issue && (
                                 <Box sx={{ mb: 2, p: 1.5, border: `1px dashed ${jiraColors.primaryBlue}`, borderRadius: '3px', backgroundColor: jiraColors.chipBgOpen }}>
                                     {issue.assigned_to && (
@@ -652,7 +631,6 @@ const IssueModal = ({ open, handleClose, issue, onSave, initialAssignedTeam }) =
                     onClick={formik.handleSubmit}
                     variant="contained"
                     disabled={loading || generatingDescription || !formik.isValid || !formik.dirty}
-                    
                 >
                     {loading ? <CircularProgress size={20} color="inherit" /> : (issue ? 'Update Issue' : 'Create Issue')}
                 </JiraButton>
