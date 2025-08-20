@@ -36,44 +36,70 @@ const ItemTypes = {
 
 const ISSUE_STATUSES = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 
-// Jira-like Color Palette
+// Enhanced Modern Color Palette
 const jiraColors = {
-    sidebarBg: '#0052cc', // Jira Blue
-    sidebarText: '#deebff',
-    sidebarHover: '#0065ff',
+    sidebarBg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Modern gradient
+    sidebarText: '#ffffff',
+    sidebarHover: 'rgba(255, 255, 255, 0.1)',
     headerBg: '#ffffff',
-    headerText: '#172b4d',
-    boardBg: '#f4f5f7', // Light grey for board background
+    headerText: '#2d3748',
+    boardBg: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', // Subtle gradient background
     columnBg: '#ffffff',
-    columnHeader: '#5e6c84', // Muted grey for column headers
-    cardBorder: '#dfe1e6', // Light grey for card borders
-    buttonPrimary: '#0052cc',
-    buttonPrimaryHover: '#0065ff',
-    buttonSecondary: '#e0e0e0',
-    buttonSecondaryHover: '#c0c0c0',
-    textDark: '#172b4d',
-    textMuted: '#5e6c84',
-    chipBg: '#e9f2ff', // Light blue for chips
-    chipText: '#0052cc',
-    deleteRed: '#ff4d4f', // A red for delete actions
-    dropZoneHighlight: '#e0e0ff', // Light blue for drop zone highlight
+    columnHeader: '#4a5568',
+    cardBorder: '#e2e8f0',
+    buttonPrimary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    buttonPrimaryHover: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+    buttonSecondary: '#f7fafc',
+    buttonSecondaryHover: '#edf2f7',
+    textDark: '#2d3748',
+    textMuted: '#718096',
+    chipBg: 'linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%)',
+    chipText: '#2d3748',
+    deleteRed: '#e53e3e',
+    dropZoneHighlight: 'rgba(102, 126, 234, 0.1)',
+    accent: '#38b2ac', // Teal accent color
+    success: '#48bb78', // Green for success states
+    warning: '#ed8936', // Orange for warnings
 };
 
 // Define sidebar widths
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 60;
 
-const RootContainer = styled(Box)({     
-  display: 'flex',     
-  height: '100vh',     
-  overflowY: 'auto',     
-  backgroundColor: jiraColors.boardBg, 
+const RootContainer = styled(Box)({
+    display: 'flex',
+    height: '100vh',
+    overflow: 'hidden',
+    background: `
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%),
+        ${jiraColors.boardBg}
+    `,
+    position: 'relative',
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23667eea" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1.5"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+        animation: 'float 20s ease-in-out infinite',
+        zIndex: 0,
+    },
+    '@keyframes float': {
+        '0%, 100%': { transform: 'translateY(0px)' },
+        '50%': { transform: 'translateY(-10px)' },
+    },
 });
 
 const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
-    backgroundColor: jiraColors.headerBg,
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
     color: jiraColors.headerText,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+    borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
     zIndex: (theme.zIndex && theme.zIndex.drawer !== undefined) ? theme.zIndex.drawer + 1 : 1201,
     width: `calc(100% - ${sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth}px)`,
     marginLeft: sidebaropen ? expandedDrawerWidth : collapsedDrawerWidth,
@@ -87,7 +113,6 @@ const StyledAppBar = styled(AppBar)(({ theme, sidebaropen }) => ({
     },
 }));
 
-// 3) MainContent: prevent flex overflow + include padding in height
 const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
     flexGrow: 1,
     display: 'flex',
@@ -112,46 +137,82 @@ const MainContent = styled(Box)(({ theme, sidebaropen }) => ({
     }
 }));
 
-
 const StyledButton = styled(Button)(({ variant }) => ({
-    borderRadius: '3px',
+    borderRadius: '8px',
     textTransform: 'none',
     fontWeight: 600,
-    padding: '8px 16px',
-    transition: 'background-color 0.2s ease-in-out',
+    padding: '10px 20px',
+    transition: 'all 0.3s ease-in-out',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     ...(variant === 'contained' && {
-        backgroundColor: jiraColors.buttonPrimary,
+        background: jiraColors.buttonPrimary,
         color: 'white',
         '&:hover': {
-            backgroundColor: jiraColors.buttonPrimaryHover,
+            background: jiraColors.buttonPrimaryHover,
+            transform: 'translateY(-2px)',
+            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
         },
     }),
     ...(variant === 'outlined' && {
-        borderColor: jiraColors.buttonSecondary,
+        borderColor: jiraColors.cardBorder,
         color: jiraColors.headerText,
+        backgroundColor: jiraColors.buttonSecondary,
         '&:hover': {
             backgroundColor: jiraColors.buttonSecondaryHover,
-            borderColor: jiraColors.buttonSecondaryHover,
+            borderColor: jiraColors.accent,
+            transform: 'translateY(-1px)',
         },
     }),
 }));
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
-    backgroundColor: jiraColors.columnBg,
-    borderRadius: '3px',
+    background: 'rgba(255, 255, 255, 0.9)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    padding: '4px',
+    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.15)',
+    border: '1px solid rgba(102, 126, 234, 0.1)',
     '& .MuiToggleButton-root': {
         textTransform: 'none',
         color: jiraColors.textMuted,
-        borderColor: jiraColors.cardBorder,
+        borderColor: 'transparent',
+        borderRadius: '12px',
+        fontWeight: 600,
+        fontSize: '0.9rem',
+        padding: '8px 16px',
+        margin: '2px',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+            transition: 'left 0.5s ease-in-out',
+        },
         '&.Mui-selected': {
-            backgroundColor: jiraColors.sidebarBg,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
+            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+            transform: 'scale(1.05)',
+            '&::before': {
+                left: '100%',
+            },
             '&:hover': {
-                backgroundColor: jiraColors.buttonPrimaryHover,
+                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                transform: 'scale(1.08)',
             },
         },
         '&:hover': {
-            backgroundColor: jiraColors.boardBg,
+            background: 'rgba(102, 126, 234, 0.1)',
+            transform: 'translateY(-2px)',
+            '&::before': {
+                left: '100%',
+            },
         },
     },
 });
@@ -164,7 +225,6 @@ const StyledKanbanColumnBox = styled(Box)(({ theme, isActive, canDrop }) => ({
     minHeight: '400px',
     display: 'flex',
     flexDirection: 'column',
-    
     gap: theme.spacing(1),
     boxShadow: '0 1px 2px rgba(5, 5, 5, 0.05)',
     transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
@@ -237,9 +297,10 @@ const Dashboard = () => {
         if (!search && loading) {
              setLoading(true);
         }
+        // Only set search loading if there's actually a search query
         if (search) {
-           setIsSearchLoading(true);
-       }
+            setIsSearchLoading(true);
+        }
         setError('');
         try {
             const params = {
@@ -266,8 +327,9 @@ const Dashboard = () => {
             setIssues([]);
         } finally {
             setLoading(false);
-            if(search){
-              setIsSearchLoading(false)
+            // Only clear search loading if it was set
+            if (search) {
+                setIsSearchLoading(false);
             }
         }
     };
@@ -429,145 +491,296 @@ const Dashboard = () => {
 
         const getColumnTitle = (status) => {
             switch (status) {
-                case 'OPEN': return 'OPEN';
-                case 'IN_PROGRESS': return 'IN PROGRESS';
-                case 'CLOSED': return 'CLOSED';
-                default: return 'UNKNOWN';
+                case 'OPEN': return '🔥 OPEN';
+                case 'IN_PROGRESS': return '⚡ IN PROGRESS';
+                case 'CLOSED': return '✅ CLOSED';
+                default: return '❓ UNKNOWN';
+            }
+        };
+
+        const getColumnGradient = (status) => {
+            switch (status) {
+                case 'OPEN': return 'linear-gradient(135deg, #ff6b6b, #ee5a24)';
+                case 'IN_PROGRESS': return 'linear-gradient(135deg, #feca57, #ff9ff3)';
+                case 'CLOSED': return 'linear-gradient(135deg, #48dbfb, #0abde3)';
+                default: return 'linear-gradient(135deg, #667eea, #764ba2)';
             }
         };
 
         const isActive = isOver && canDrop;
         return (
-        <StyledKanbanColumnBox
-            ref={drop}
-            isActive={isActive}
-            canDrop={canDrop}
-            sx={{
-                flex: '1 1 300px',
-                minWidth: { xs: '100%', sm: '280px', md: '300px' },
-                maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` },
-                boxSizing: 'border-box',
-                backgroundColor: canDrop ? '#f0f4ff' : '#ffffff',
-                border: isActive ? '2px solid #0052cc' : '2px solid #e1e4e8',
-                borderRadius: '12px',
-                p: 2,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                transition: 'all 0.3s ease-in-out',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                '&:hover': {
-                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.1)',
-                },
-                '&.is-active': {
-                    backgroundColor: '#dcebff',
-                },
-            }}
-        >
-            {/* Column Header */}
-            <StyledColumnHeader align="left" sx={{
-                mb: 2,
-                pb: 1,
-                borderBottom: '1px solid #e1e4e8',
-                fontWeight: 700,
-                fontSize: '1rem',
-                color: '#24292e',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-            }}>
-                <span>{getColumnTitle(status)}</span>
-                <span style={{ fontSize: '0.9rem', color: '#586069', fontWeight: 500 }}>
-                    ({issues.length})
-                </span>
-            </StyledColumnHeader>
-        
-            {/* Issues Container */}
-            <Box sx={{
-                flexGrow: 1,
-                overflowY: 'auto',
-                // Refined scrollbar styling
-                '&::-webkit-scrollbar': {
-                    width: '8px',
-                },
-                '&::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0,0,0,.15)',
-                    borderRadius: '4px',
-                    border: '2px solid transparent',
-                    backgroundClip: 'content-box',
-                },
-            }}>
-                {issues.length === 0 && !isActive ? (
-                    <Box
-                        sx={{
-                            my: 2,
-                            p: 2,
-                            border: '2px dashed #dce1e6', // Dashed border for visual emphasis
-                            borderRadius: '8px',
-                            backgroundColor: '#fafbfc',
-                        }}
-                    >
-                        <Typography variant="body2" align="center" sx={{ fontStyle: 'italic', color: '#586069' }}>
-                            No issues here. Drag and drop to add or click the button below.
-                        </Typography>
-                    </Box>
-                ) : (
-                    issues.map((issue) => (
-                        <Box
-                            key={issue.id}
-                            sx={{
-                                my: 1, // Vertical margin for spacing between cards
-                                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                                '&:hover': {
-                                    transform: 'translateY(-2px)', // Lift card slightly on hover
-                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                },
-                            }}
-                        >
-                            <IssueCard
-                                issue={issue}
-                                onEdit={handleEditIssue}
-                                onDelete={handleDeleteIssue}
-                            />
-                        </Box>
-                    ))
-                )}
-            </Box>
-        
-            {/* Create Issue Button */}
-            <Button
-                variant="text"
-                startIcon={<AddIcon />}
-                onClick={() => handleCreateIssueInColumn(status)}
+<StyledKanbanColumnBox
+    ref={drop}
+    isActive={isActive}
+    canDrop={canDrop}
+    sx={{
+        flex: '1 1 300px',
+        minWidth: { xs: '100%', sm: '280px', md: '300px' },
+        maxWidth: { xs: '100%', sm: `calc(33.33% - ${theme.spacing(2)})` },
+        boxSizing: 'border-box',
+        background: canDrop ? 'linear-gradient(135deg, #f0f4ff 0%, #e6fffa 100%)' : 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        border: isActive ? '2px solid #667eea' : '1px solid rgba(226, 232, 240, 0.8)',
+        borderRadius: '16px',
+        p: 2,
+        boxShadow: canDrop ? '0 8px 25px rgba(102, 126, 234, 0.15)' : '0 4px 20px rgba(0, 0, 0, 0.08)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        minHeight: '200px',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+            border: '1px solid rgba(102, 126, 234, 0.3)',
+        },
+        '&.is-active': {
+            background: 'linear-gradient(135deg, #dcebff 0%, #e6fffa 100%)',
+            transform: 'scale(1.02)',
+        },
+    }}
+>
+    {/* Column Header */}
+    <StyledColumnHeader align="left" sx={{
+        mb: 2,
+        pb: 1,
+        background: getColumnGradient(status),
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        borderRadius: '8px',
+        p: 1,
+        fontWeight: 800,
+        fontSize: '1.1rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'relative',
+        '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: getColumnGradient(status),
+            borderRadius: '2px',
+            animation: 'pulse 2s ease-in-out infinite',
+        },
+        '@keyframes pulse': {
+            '0%, 100%': { opacity: 0.6 },
+            '50%': { opacity: 1 },
+        },
+    }}>
+        <span>{getColumnTitle(status)}</span>
+        <Box sx={{
+            background: getColumnGradient(status),
+            borderRadius: '12px',
+            px: 1.5,
+            py: 0.5,
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: 'white',
+            minWidth: '24px',
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        }}>
+            {issues.length}
+        </Box>
+    </StyledColumnHeader>
+
+    {/* Issues Container */}
+    <Box sx={{
+        flexGrow: 1,
+        overflowY: 'auto',
+        // Refined scrollbar styling
+        '&::-webkit-scrollbar': {
+            width: '6px',
+        },
+        '&::-webkit-scrollbar-track': {
+            background: 'rgba(102, 126, 234, 0.1)',
+            borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            borderRadius: '10px',
+            '&:hover': {
+                background: 'linear-gradient(135deg, #5a67d8, #6b46c1)',
+            },
+        },
+    }}>
+        {issues.length === 0 && !isActive ? (
+            <Box
                 sx={{
-                    mt: 2,
-                    textTransform: 'none',
-                    color: '#586069',
-                    fontWeight: 500,
-                    fontSize: '0.9rem',
-                    '&:hover': {
-                        backgroundColor: 'rgba(94, 108, 132, 0.08)',
-                        color: '#24292e',
+                    my: 2,
+                    p: 3,
+                    border: '2px dashed rgba(102, 126, 234, 0.3)',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                    position: 'relative',
+                    '&::before': {
+                        content: '"✨"',
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        fontSize: '1.2rem',
+                        animation: 'sparkle 2s ease-in-out infinite',
                     },
-                    alignSelf: 'flex-start',
-                    transition: 'all 0.2s ease-in-out',
+                    '@keyframes sparkle': {
+                        '0%, 100%': { opacity: 0.3, transform: 'scale(1)' },
+                        '50%': { opacity: 1, transform: 'scale(1.2)' },
+                    },
                 }}
             >
-                Create issue
-            </Button>
-        </StyledKanbanColumnBox>
+                <Typography variant="body2" align="center" sx={{ fontStyle: 'italic', color: '#667eea', fontWeight: 500 }}>
+                    🎯 No issues here. Drag and drop to add or click the button below.
+                </Typography>
+            </Box>
+        ) : (
+            issues.map((issue) => (
+                <Box
+                    key={issue.id}
+                    sx={{
+                        my: 1,
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                            borderRadius: '12px',
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease-in-out',
+                            zIndex: -1,
+                        },
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                            transform: 'translateY(-4px) scale(1.02)',
+                            '&::before': {
+                                opacity: 1,
+                            },
+                        },
+                    }}
+                >
+                    <IssueCard
+                        issue={issue}
+                        onEdit={handleEditIssue}
+                        onDelete={handleDeleteIssue}
+                    />
+                </Box>
+            ))
+        )}
+    </Box>
+
+    {/* Create Issue Button */}
+    <Button
+        variant="text"
+        startIcon={<AddIcon />}
+        onClick={() => handleCreateIssueInColumn(status)}
+        sx={{
+            mt: 2,
+            textTransform: 'none',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+            color: '#667eea',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            borderRadius: '12px',
+            border: '1px solid rgba(102, 126, 234, 0.2)',
+            '&:hover': {
+                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+            },
+            alignSelf: 'flex-start',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+    >
+        ✨ Create issue
+    </Button>
+</StyledKanbanColumnBox>
         );
     };
 
     if (loading && !isSearchLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100vh" sx={{ backgroundColor: jiraColors.boardBg }}>
-                <CircularProgress />
+            <Box 
+                display="flex" 
+                flexDirection="column"
+                justifyContent="center" 
+                alignItems="center" 
+                height="100vh" 
+                sx={{ 
+                    background: `
+                        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                        ${jiraColors.boardBg}
+                    `,
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        width: '100px',
+                        height: '100px',
+                        background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                        borderRadius: '50%',
+                        top: '20%',
+                        left: '10%',
+                        animation: 'float1 6s ease-in-out infinite',
+                        opacity: 0.1,
+                    },
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        width: '150px',
+                        height: '150px',
+                        background: 'linear-gradient(45deg, #ff6b6b, #ee5a24)',
+                        borderRadius: '50%',
+                        top: '60%',
+                        right: '15%',
+                        animation: 'float2 8s ease-in-out infinite',
+                        opacity: 0.1,
+                    },
+                    '@keyframes float1': {
+                        '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                        '50%': { transform: 'translateY(-20px) rotate(180deg)' },
+                    },
+                    '@keyframes float2': {
+                        '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                        '50%': { transform: 'translateY(-30px) rotate(-180deg)' },
+                    },
+                }}
+            >
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
+                    <Typography 
+                        variant="h4" 
+                        sx={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontWeight: 800,
+                            mb: 1,
+                        }}
+                    >
+                        🎆 Loading Magic...
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#667eea', fontWeight: 500 }}>
+                        Preparing your enchanted workspace
+                    </Typography>
+                </Box>
+                <CircularProgress 
+                    size={60} 
+                    sx={{
+                        color: '#667eea',
+                        '& .MuiCircularProgress-circle': {
+                            strokeLinecap: 'round',
+                        },
+                    }}
+                />
             </Box>
         );
     }
@@ -600,7 +813,13 @@ const Dashboard = () => {
             flexDirection: 'column',
             height: '100%',
         }}>
-            <Toolbar sx={{ backgroundColor: jiraColors.sidebarBg, minHeight: '64px !important', justifyContent: sidebarOpen ? 'space-between' : 'center', pr: sidebarOpen ? 2 : 0 }}>
+            <Toolbar sx={{ 
+                background: jiraColors.sidebarBg, 
+                minHeight: '64px !important', 
+                justifyContent: sidebarOpen ? 'space-between' : 'center', 
+                pr: sidebarOpen ? 2 : 0,
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
                 {sidebarOpen && (
                     <Typography variant="h6" noWrap component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
                         Issue Tracker
@@ -623,19 +842,22 @@ const Dashboard = () => {
                 </IconButton>
             </Toolbar>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-    <List sx={{ flexGrow: 1 }}>
+            <List sx={{ flexGrow: 1 }}>
     <ListItem
         button
         onClick={() => { setViewMode('board'); setMobileOpen(false); }}
         sx={{
             py: 1.5,
             justifyContent: sidebarOpen ? 'flex-start' : 'center',
-            backgroundColor: viewMode === 'board' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-            borderLeft: viewMode === 'board' ? '3px solid #d5e7d6ff' : 'none',
+            backgroundColor: viewMode === 'board' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+            borderLeft: viewMode === 'board' ? '4px solid #38b2ac' : 'none',
+            borderRadius: '0 25px 25px 0',
+            mx: 1,
             '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                transform: 'translateX(4px)',
-                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                transform: 'translateX(8px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             },
             borderRadius: '4px',
             '&.Mui-selected': {
@@ -808,10 +1030,10 @@ const Dashboard = () => {
                         '& .MuiDrawer-paper': {
                             width: sidebarOpen ? expandedDrawerWidth : collapsedDrawerWidth,
                             boxSizing: 'border-box',
-                            backgroundColor: jiraColors.sidebarBg,
+                            background: jiraColors.sidebarBg,
                             color: jiraColors.sidebarText,
                             borderRight: 'none',
-                            boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
+                            boxShadow: '4px 0 20px rgba(0, 0, 0, 0.15)',
                             paddingTop: theme.spacing(8),
                             transition: theme.transitions ? theme.transitions.create('width', {
                                 easing: theme.transitions.easing.sharp,
@@ -869,8 +1091,19 @@ const Dashboard = () => {
                                 mb: 3,
                                 px: { xs: 0, md: 0 },
                             }}>
-                                <Typography variant="h5" component="h1" sx={{ color: jiraColors.headerText, fontWeight: 'bold' }}>
-                                    Board
+                                <Typography 
+                                    variant="h4" 
+                                    component="h1" 
+                                    sx={{ 
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        fontWeight: 800,
+                                        letterSpacing: '-0.02em'
+                                    }}
+                                >
+                                    🚀 Project Board
                                 </Typography>
                                 <StyledToggleButtonGroup
                                     style={{marginRight: "1.9%"}}
@@ -879,12 +1112,10 @@ const Dashboard = () => {
                                     onChange={handleStatusFilterChange}
                                     aria-label="issue status filter"
                                 >
-                                    <ToggleButton value="ALL">All</ToggleButton>
-                                    {ISSUE_STATUSES.map(status => (
-                                        <ToggleButton key={status} value={status}>
-                                            {status.replace('_', ' ')}
-                                        </ToggleButton>
-                                    ))}
+                                    <ToggleButton value="ALL">🌟 All</ToggleButton>
+                                    <ToggleButton value="OPEN">🔥 Open</ToggleButton>
+                                    <ToggleButton value="IN_PROGRESS">⚡ In Progress</ToggleButton>
+                                    <ToggleButton value="CLOSED">✅ Closed</ToggleButton>
                                 </StyledToggleButtonGroup>
                             </Box>
 
@@ -910,36 +1141,40 @@ const Dashboard = () => {
                                             ),
                                         }}
                                         sx={{
-                                            backgroundColor: jiraColors.columnBg,
-                                            borderRadius: '3px',
+                                            background: 'rgba(255, 255, 255, 0.9)',
+                                            backdropFilter: 'blur(10px)',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                                             '& .MuiOutlinedInput-root': {
                                                 '& fieldset': {
-                                                    borderColor: jiraColors.cardBorder,
+                                                    borderColor: 'rgba(102, 126, 234, 0.2)',
+                                                    borderWidth: '2px',
                                                 },
                                                 '&:hover fieldset': {
-                                                    borderColor: jiraColors.textMuted,
+                                                    borderColor: 'rgba(102, 126, 234, 0.4)',
                                                 },
                                                 '&.Mui-focused fieldset': {
-                                                    borderColor: jiraColors.buttonPrimary,
-                                                    borderWidth: '1px',
+                                                    borderColor: '#667eea',
+                                                    borderWidth: '2px',
+                                                    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
                                                 },
                                             },
                                             '& .MuiInputBase-input': {
-                                                padding: '10px 14px',
+                                                padding: '12px 16px',
+                                                fontSize: '1rem',
                                             }
                                         }}
                                     />
                                 </form>
                             </Box>
-                          
 
                             <Box
                                 sx={{
                                     display: 'flex',
                                     flexWrap: 'nowrap',
                                     gap: theme.spacing(2),
-                                    overflowX: 'auto',
                                     pb: 2,
+                                    overflowX: 'auto',
                                     justifyContent: 'flex-start',
                                 }}
                             >
@@ -952,7 +1187,6 @@ const Dashboard = () => {
                                     />
                                 ))}
                             </Box>
-                            
                         </Box>
                     )}
 
@@ -965,8 +1199,19 @@ const Dashboard = () => {
                             }}
                         >
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                                <Typography variant="h5" gutterBottom sx={{ color: jiraColors.headerText, fontWeight: 'bold' }}>
-                                    Your Teams
+                                <Typography 
+                                    variant="h4" 
+                                    gutterBottom 
+                                    sx={{ 
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        fontWeight: 800,
+                                        letterSpacing: '-0.02em'
+                                    }}
+                                >
+                                    👥 Your Teams
                                 </Typography>
                                 <StyledButton
                                     variant="contained"
@@ -1015,16 +1260,39 @@ const Dashboard = () => {
                                         >
                                             <Paper
                                                 sx={{
-                                                    p: 2,
-                                                    border: `1px solid ${jiraColors.cardBorder}`,
-                                                    borderRadius: '3px',
+                                                    p: 3,
+                                                    background: 'rgba(255, 255, 255, 0.9)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    border: '2px solid transparent',
+                                                    backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), linear-gradient(135deg, #667eea, #764ba2)',
+                                                    backgroundOrigin: 'border-box',
+                                                    backgroundClip: 'content-box, border-box',
+                                                    borderRadius: '16px',
                                                     cursor: 'pointer',
-                                                    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }, // More pronounced hover shadow
-                                                    backgroundColor: jiraColors.columnBg,
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    '&::before': {
+                                                        content: '""',
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: '-100%',
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                                                        transition: 'left 0.5s',
+                                                    },
+                                                    '&:hover': { 
+                                                        transform: 'translateY(-8px) scale(1.02)',
+                                                        boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)',
+                                                        '&::before': {
+                                                            left: '100%',
+                                                        },
+                                                    },
                                                     height: '100%',
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     justifyContent: 'space-between',
+                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                                                 }}
                                             >
                                                 <Box>
@@ -1034,12 +1302,23 @@ const Dashboard = () => {
                                                     </Box>
                                                     <Typography variant="body2" color="text.secondary" mt={1}>Members:</Typography>
                                                     <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                        {(team.members ?? []).map((member) => (
+                                                        {(team.members ?? []).map((member, index) => (
                                                             <Chip
                                                                 key={member.id || member}
                                                                 label={typeof member === 'object' ? member.username : member}
                                                                 size="small"
-                                                                sx={{ backgroundColor: jiraColors.chipBg, color: jiraColors.chipText, fontWeight: 600 }}
+                                                                sx={{ 
+                                                                    background: `linear-gradient(135deg, hsl(${index * 60}, 70%, 85%) 0%, hsl(${index * 60 + 30}, 70%, 75%) 100%)`,
+                                                                    color: '#2d3748',
+                                                                    fontWeight: 600,
+                                                                    border: '1px solid rgba(255,255,255,0.3)',
+                                                                    backdropFilter: 'blur(5px)',
+                                                                    '&:hover': {
+                                                                        transform: 'scale(1.05)',
+                                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    },
+                                                                    transition: 'all 0.2s ease-in-out',
+                                                                }}
                                                             />
                                                         ))}
                                                     </Box>
