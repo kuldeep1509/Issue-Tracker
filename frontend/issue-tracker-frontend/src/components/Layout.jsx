@@ -147,7 +147,7 @@ const WelcomeText = styled(Typography)({
 });
 
 const MainContentBox = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(4),
+
     background: `
         radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
@@ -176,9 +176,7 @@ const MainContentBox = styled(Box)(({ theme }) => ({
         '0%, 100%': { transform: 'translateY(0px)' },
         '50%': { transform: 'translateY(-10px)' },
     },
-    [theme.breakpoints.down('sm')]: {
-        padding: theme.spacing(2),
-    },
+
 }));
 
 
