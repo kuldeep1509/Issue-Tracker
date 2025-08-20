@@ -123,13 +123,10 @@ const LoginPage = () => {
             setLoading(true);
             setError('');
             try {
-                const success = await login(values.username, values.password);
-                if (!success) {
-                    setError('Invalid username or password. Please try again.');
-                }
+                await login(values.username, values.password);
             } catch (err) {
                 console.error('Login error:', err);
-                setError('Something went wrong. Please try again.');
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
