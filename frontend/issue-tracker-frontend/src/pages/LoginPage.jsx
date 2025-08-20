@@ -16,100 +16,71 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/system';
 
-// --- Jira-like Color Palette Definition ---
-const jiraLoginColors = {
-    primaryBlue: '#0052cc', // Jira's main blue for buttons, links, focus
-    primaryBlueDark: '#0065ff', // Darker blue for hover
-    backgroundLight: '#f4f5f7', // Light grey background, similar to Jira's board
-    backgroundMedium: '#dfe1e6', // Slightly darker grey for borders/subtle elements
-    textDark: '#172b4d', // Dark text for headings and primary content
-    textMuted: '#5e6c84', // Muted grey for secondary text
-    white: '#ffffff',
-    shadow: 'rgba(0, 0, 0, 0.1)', // Subtle shadow
-    errorRed: '#de350b', // Jira's error red
-};
-
-// --- Styled Components with Jira-like Palette & Spacing ---
-
-const JiraBackgroundBox = styled(Box)({
-    height: '100vh', // Set height to 100% of viewport height
-    width: '100vw',  // Set width to 100% of viewport width
-    backgroundColor: jiraLoginColors.backgroundLight, // Solid light grey background
+const BackgroundBox = styled(Box)({
+    height: '100vh',
+    width: '100vw',
+    background: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '24px', // General padding around the container
-    overflow: 'hidden', // Prevent scrolling on this container
-    boxSizing: 'border-box', // Include padding in the element's total width and height
+    padding: '24px',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
 });
 
-const JiraFormContainer = styled(Box)(({ theme }) => ({
-    backgroundColor: jiraLoginColors.white,
-    borderRadius: '3px', // Jira typically uses slightly rounded corners, not very rounded
-    boxShadow: `0 4px 8px ${jiraLoginColors.shadow}`, // Subtle shadow
-    padding: theme.spacing(4), // Standard padding
+const FormContainer = styled(Box)(({ theme }) => ({
+    background: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: '16px',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+    padding: theme.spacing(4),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     width: '100%',
-    maxWidth: '400px', // Jira's login forms are typically narrower
-    border: `1px solid ${jiraLoginColors.backgroundMedium}`, // Light border
+    maxWidth: '400px',
 }));
 
-const JiraTextField = styled(TextField)(({ theme }) => ({
-    marginBottom: theme.spacing(2), // Consistent vertical margin
+const StyledTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(2),
     '& .MuiOutlinedInput-root': {
-        borderRadius: '3px', // Match Jira's input field corners
+        borderRadius: '12px',
         '& fieldset': {
-            borderColor: jiraLoginColors.backgroundMedium,
+            borderColor: '#e2e8f0',
         },
         '&:hover fieldset': {
-            borderColor: jiraLoginColors.textMuted,
+            borderColor: '#667eea',
         },
         '&.Mui-focused fieldset': {
-            borderColor: jiraLoginColors.primaryBlue,
-            borderWidth: '2px',
+            borderColor: '#667eea',
         },
     },
     '& .MuiInputBase-input': {
-        padding: '12px 14px', // Standard input padding
-        color: jiraLoginColors.textDark,
+        padding: '14px 16px',
     },
     '& .MuiInputLabel-root': {
-        color: jiraLoginColors.textMuted,
         '&.Mui-focused': {
-            color: jiraLoginColors.primaryBlue,
+            color: '#667eea',
         },
     },
-    '& .MuiFormHelperText-root': {
-        color: jiraLoginColors.errorRed,
-        marginTop: theme.spacing(0.5),
-        marginBottom: 0,
-    }
 }));
 
-const JiraButton = styled(Button)(({ theme }) => ({
-    backgroundColor: jiraLoginColors.primaryBlue,
-    color: jiraLoginColors.white,
-    borderRadius: '3px',
-    height: 40, // Standard button height
-    fontWeight: 600, // Bolder text
-    fontSize: '0.95rem',
-    textTransform: 'none', // Jira buttons are not all caps
-    transition: 'background-color 0.2s ease-in-out',
+const StyledButton = styled(Button)({
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    borderRadius: '12px',
+    height: '48px',
+    fontWeight: 600,
+    textTransform: 'none',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
     '&:hover': {
-        backgroundColor: jiraLoginColors.primaryBlueDark,
+        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
     },
-    '&:disabled': {
-        backgroundColor: jiraLoginColors.backgroundMedium,
-        color: jiraLoginColors.textMuted,
-    },
-}));
+});
 
 const LoginPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth(); // Assuming useAuth provides a login function
+    const { login } = useAuth();
 
     const validationSchema = yup.object({
         username: yup.string().trim().required('Username is required'),
@@ -133,35 +104,53 @@ const LoginPage = () => {
         },
     });
 
-    // Effect to control body overflow
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
-            document.body.style.overflow = ''; // Reset on unmount
+            document.body.style.overflow = '';
         };
     }, []);
 
     return (
-        <JiraBackgroundBox>
+        <BackgroundBox>
             <Container maxWidth="xs">
-                <JiraFormContainer>
-                    {/* Jira typically uses a logo here, or just text. Keeping a small icon for visual cue. */}
-                    <Avatar sx={{ m: 1, bgcolor: jiraLoginColors.primaryBlue, width: 48, height: 48 }}>
-                        <LockOutlinedIcon sx={{ fontSize: 24 }} />
+                <FormContainer>
+                    <Avatar sx={{ 
+                        m: 1, 
+                        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                        width: 56, 
+                        height: 56,
+                    }}>
+                        <LockOutlinedIcon sx={{ fontSize: 28 }} />
                     </Avatar>
                     <Typography
                         component="h1"
-                        variant="h5" // Smaller heading than before, more in line with Jira
-                        mb={3} // Consistent margin below heading
-                        sx={{ fontWeight: 600, color: jiraLoginColors.textDark, textAlign: 'center' }}
+                        variant="h4"
+                        mb={3}
+                        sx={{ 
+                            fontWeight: 700, 
+                            color: '#2d3748',
+                            textAlign: 'center',
+                        }}
                     >
-                        Log in to your account
+                        Welcome Back
                     </Typography>
 
-                    {error && <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: '3px', fontSize: '0.875rem' }}>{error}</Alert>}
+                    {error && (
+                        <Alert 
+                            severity="error" 
+                            sx={{ 
+                                mb: 2, 
+                                width: '100%', 
+                                borderRadius: '12px',
+                            }}
+                        >
+                            {error}
+                        </Alert>
+                    )}
 
                     <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
-                        <JiraTextField
+                        <StyledTextField
                             fullWidth
                             id="username"
                             name="username"
@@ -175,7 +164,7 @@ const LoginPage = () => {
                             required
                         />
 
-                        <JiraTextField
+                        <StyledTextField
                             fullWidth
                             id="password"
                             name="password"
@@ -190,36 +179,37 @@ const LoginPage = () => {
                             required
                         />
 
-                        <JiraButton
+                        <StyledButton
                             type="submit"
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 2, mb: 2 }} // Adjusted margins for button
+                            sx={{ mt: 2, mb: 2 }}
                             disabled={loading || !formik.isValid || !formik.dirty}
                         >
-                            {loading ? <CircularProgress size={20} color="inherit" /> : 'Log In'}
-                        </JiraButton>
+                            {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Sign In'}
+                        </StyledButton>
 
-                        <Typography variant="body2" align="center" sx={{ color: jiraLoginColors.textMuted, mt: 1 }}>
-                            Don’t have an account?{' '}
+                        <Typography 
+                            variant="body2" 
+                            align="center" 
+                            sx={{ color: '#718096', mt: 1 }}
+                        >
+                            Don't have an account?{' '}
                             <Link
                                 to="/register"
                                 style={{
                                     textDecoration: 'none',
-                                    color: jiraLoginColors.primaryBlue,
+                                    color: '#667eea',
                                     fontWeight: 600,
-                                    transition: 'color 0.2s ease-in-out',
                                 }}
-                                onMouseOver={(e) => e.target.style.color = jiraLoginColors.primaryBlueDark}
-                                onMouseOut={(e) => e.target.style.color = jiraLoginColors.primaryBlue}
                             >
                                 Sign Up
                             </Link>
                         </Typography>
                     </Box>
-                </JiraFormContainer>
+                </FormContainer>
             </Container>
-        </JiraBackgroundBox>
+        </BackgroundBox>
     );
 };
 
