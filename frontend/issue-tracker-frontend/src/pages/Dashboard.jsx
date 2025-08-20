@@ -1116,9 +1116,29 @@ const Dashboard = () => {
                                         aria-haspopup="true"
                                         onClick={handleMenu}
                                         color="inherit"
-                                        sx={{ color: jiraColors.headerText }}
+                                        sx={{ 
+                                            color: jiraColors.headerText,
+                                            transition: 'all 0.3s ease-in-out',
+                                            '&:hover': {
+                                                transform: 'scale(1.1)',
+                                            }
+                                        }}
                                     >
-                                        <Avatar sx={{ bgcolor: jiraColors.sidebarBg, width: 32, height: 32, fontSize: '0.8rem' }}>
+                                        <Avatar sx={{ 
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+                                            width: 40, 
+                                            height: 40, 
+                                            fontSize: '1rem',
+                                            fontWeight: 700,
+                                            color: '#fff',
+                                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            '&:hover': {
+                                                boxShadow: '0 6px 25px rgba(102, 126, 234, 0.5)',
+                                                transform: 'translateY(-2px)',
+                                            }
+                                        }}>
                                             {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
                                         </Avatar>
                                     </IconButton>
@@ -1139,7 +1159,7 @@ const Dashboard = () => {
                                         PaperProps={{
                                             sx: {
                                                 borderRadius: '12px',
-                                                background: 'rgba(255, 255, 255, 0.95)',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%, #ff6b6b 200%)',
                                                 backdropFilter: 'blur(10px)',
                                                 border: '1px solid rgba(102, 126, 234, 0.1)',
                                                 boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
