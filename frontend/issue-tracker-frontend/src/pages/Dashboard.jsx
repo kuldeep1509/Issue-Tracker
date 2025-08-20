@@ -853,21 +853,38 @@ const Dashboard = () => {
             borderLeft: viewMode === 'board' ? '4px solid #38b2ac' : 'none',
             borderRadius: '0 25px 25px 0',
             mx: 1,
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                transition: 'left 0.5s ease-in-out',
+            },
             '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                transform: 'translateX(8px)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                transform: 'translateX(12px) scale(1.02)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 6px 20px rgba(56, 178, 172, 0.3)',
+                '&::before': {
+                    left: '100%',
+                },
             },
-            borderRadius: '4px',
-            '&.Mui-selected': {
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                borderLeft: '3px solid #bcc4bcff',
-            }
         }}
     >
-        <DashboardIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
-        {sidebarOpen && <ListItemText primary="Board" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+        <DashboardIcon sx={{ 
+            color: 'rgba(255, 255, 255, 0.8)', 
+            mr: sidebarOpen ? 2 : 0,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+                transform: 'rotate(15deg) scale(1.1)',
+            },
+        }} />
+        {sidebarOpen && <ListItemText primary="🏠 Board" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }} />}
     </ListItem>
 
     <ListItem
@@ -876,22 +893,42 @@ const Dashboard = () => {
         sx={{
             py: 1.5,
             justifyContent: sidebarOpen ? 'flex-start' : 'center',
-            backgroundColor: viewMode === 'teams' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-            borderLeft: viewMode === 'teams' ? '3px solid #c7d3c7ff' : 'none',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                transform: 'translateX(4px)',
-                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+            backgroundColor: viewMode === 'teams' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+            borderLeft: viewMode === 'teams' ? '4px solid #38b2ac' : 'none',
+            borderRadius: '0 25px 25px 0',
+            mx: 1,
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                transition: 'left 0.5s ease-in-out',
             },
-            borderRadius: '4px',
-            '&.Mui-selected': {
+            '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                borderLeft: '3px solid #d8e7d9ff',
-            }
+                transform: 'translateX(12px) scale(1.02)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 6px 20px rgba(56, 178, 172, 0.3)',
+                '&::before': {
+                    left: '100%',
+                },
+            },
         }}
     >
-        <GroupIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
-        {sidebarOpen && <ListItemText primary="Teams" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+        <GroupIcon sx={{ 
+            color: 'rgba(255, 255, 255, 0.8)', 
+            mr: sidebarOpen ? 2 : 0,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+                transform: 'rotate(15deg) scale(1.1)',
+            },
+        }} />
+        {sidebarOpen && <ListItemText primary="👥 Teams" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }} />}
     </ListItem>
 
     {user?.is_staff && (
@@ -901,16 +938,40 @@ const Dashboard = () => {
             sx={{
                 py: 1.5,
                 justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    transform: 'translateX(4px)',
-                    transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+                borderRadius: '0 25px 25px 0',
+                mx: 1,
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                    transition: 'left 0.5s ease-in-out',
                 },
-                borderRadius: '4px',
+                '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    transform: 'translateX(12px) scale(1.02)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 6px 20px rgba(56, 178, 172, 0.3)',
+                    '&::before': {
+                        left: '100%',
+                    },
+                },
             }}
         >
-            <PersonAddIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
-            {sidebarOpen && <ListItemText primary="Invite User" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+            <PersonAddIcon sx={{ 
+                color: 'rgba(255, 255, 255, 0.8)', 
+                mr: sidebarOpen ? 2 : 0,
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                    transform: 'rotate(15deg) scale(1.1)',
+                },
+            }} />
+            {sidebarOpen && <ListItemText primary="✨ Invite User" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }} />}
         </ListItem>
     )}
 
@@ -920,22 +981,42 @@ const Dashboard = () => {
         sx={{
             py: 1.5,
             justifyContent: sidebarOpen ? 'flex-start' : 'center',
-            backgroundColor: viewMode === 'allIssues' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-            borderLeft: viewMode === 'allIssues' ? '3px solid #e9f0eaff' : 'none',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                transform: 'translateX(4px)',
-                transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
+            backgroundColor: viewMode === 'allIssues' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+            borderLeft: viewMode === 'allIssues' ? '4px solid #38b2ac' : 'none',
+            borderRadius: '0 25px 25px 0',
+            mx: 1,
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                transition: 'left 0.5s ease-in-out',
             },
-            borderRadius: '4px',
-            '&.Mui-selected': {
+            '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                borderLeft: '3px solid #cbdfcbff',
-            }
+                transform: 'translateX(12px) scale(1.02)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 6px 20px rgba(56, 178, 172, 0.3)',
+                '&::before': {
+                    left: '100%',
+                },
+            },
         }}
     >
-        <BugReportIcon sx={{ color: 'rgba(255, 255, 255, 0.8)', mr: sidebarOpen ? 2 : 0 }} />
-        {sidebarOpen && <ListItemText primary="All Issues" sx={{ color: 'rgba(255, 255, 255, 0.9)' }} />}
+        <BugReportIcon sx={{ 
+            color: 'rgba(255, 255, 255, 0.8)', 
+            mr: sidebarOpen ? 2 : 0,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+                transform: 'rotate(15deg) scale(1.1)',
+            },
+        }} />
+        {sidebarOpen && <ListItemText primary="🐛 All Issues" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }} />}
     </ListItem>
 </List>
         </Box>
@@ -1055,6 +1136,15 @@ const Dashboard = () => {
                                         }}
                                         open={Boolean(anchorEl)}
                                         onClose={handleCloseMenu}
+                                        PaperProps={{
+                                            sx: {
+                                                borderRadius: '12px',
+                                                background: 'rgba(255, 255, 255, 0.95)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(102, 126, 234, 0.1)',
+                                                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+                                            }
+                                        }}
                                     >
                                         <MuiMenuItem 
                                             onClick={handleLogout}
@@ -1170,12 +1260,31 @@ const Dashboard = () => {
                                     variant="h4" 
                                     component="h1" 
                                     sx={{ 
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%, #ff6b6b 200%)',
+                                        backgroundSize: '200% 100%',
                                         backgroundClip: 'text',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         fontWeight: 800,
-                                        letterSpacing: '-0.02em'
+                                        letterSpacing: '-0.02em',
+                                        position: 'relative',
+                                        animation: 'gradientShift 3s ease-in-out infinite',
+                                        '&::after': {
+                                            content: '"✨"',
+                                            position: 'absolute',
+                                            right: '-30px',
+                                            top: '-5px',
+                                            fontSize: '1.2rem',
+                                            animation: 'sparkle 2s ease-in-out infinite',
+                                        },
+                                        '@keyframes gradientShift': {
+                                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                                            '50%': { backgroundPosition: '100% 50%' },
+                                        },
+                                        '@keyframes sparkle': {
+                                            '0%, 100%': { opacity: 0.3, transform: 'scale(1) rotate(0deg)' },
+                                            '50%': { opacity: 1, transform: 'scale(1.2) rotate(180deg)' },
+                                        },
                                     }}
                                 >
                                     🚀 Project Board
@@ -1278,12 +1387,31 @@ const Dashboard = () => {
                                     variant="h4" 
                                     gutterBottom 
                                     sx={{ 
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%, #ff6b6b 200%)',
+                                        backgroundSize: '200% 100%',
                                         backgroundClip: 'text',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         fontWeight: 800,
-                                        letterSpacing: '-0.02em'
+                                        letterSpacing: '-0.02em',
+                                        position: 'relative',
+                                        animation: 'gradientShift 3s ease-in-out infinite',
+                                        '&::after': {
+                                            content: '"✨"',
+                                            position: 'absolute',
+                                            right: '-30px',
+                                            top: '-5px',
+                                            fontSize: '1.2rem',
+                                            animation: 'sparkle 2s ease-in-out infinite',
+                                        },
+                                        '@keyframes gradientShift': {
+                                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                                            '50%': { backgroundPosition: '100% 50%' },
+                                        },
+                                        '@keyframes sparkle': {
+                                            '0%, 100%': { opacity: 0.3, transform: 'scale(1) rotate(0deg)' },
+                                            '50%': { opacity: 1, transform: 'scale(1.2) rotate(180deg)' },
+                                        },
                                     }}
                                 >
                                     👥 Your Teams
