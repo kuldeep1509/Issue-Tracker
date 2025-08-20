@@ -66,7 +66,14 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
             setIsAuthenticated(false);
-            return false;
+            
+            // Check if it's an authentication error (401) and throw specific error
+            if (error.response?.status === 401) {
+                throw new Error('Invalid username or password. Please try again.');
+            }
+            
+            // For other errors, throw a generic error
+            throw new Error('Something went wrong. Please try again.');
         }
     }, [navigate, loadUser]);
 
