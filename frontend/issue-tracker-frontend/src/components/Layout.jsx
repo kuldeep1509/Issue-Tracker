@@ -155,7 +155,7 @@ const MainContentBox = styled(Box)(({ theme }) => ({
         ${jiraColors.backgroundLight}
     `,
     flexGrow: 1,
-    overflowY: 'auto',
+    overflowY: 'hidden',
     position: 'relative',
     '&::before': {
         content: '""',
