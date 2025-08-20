@@ -963,12 +963,55 @@ const Dashboard = () => {
                                 component={Link}
                                 to="/dashboard"
                                 sx={{
-                                    color: jiraColors.headerText,
-                                    fontWeight: 'bold',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%, #ff6b6b 200%)',
+                                    backgroundSize: '200% 100%',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    fontWeight: 800,
                                     mr: 2,
                                     textDecoration: 'none',
+                                    position: 'relative',
+                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    animation: 'gradientShift 3s ease-in-out infinite',
+                                    '&::before': {
+                                        content: '"🚀"',
+                                        position: 'absolute',
+                                        left: '-25px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        fontSize: '1rem',
+                                        opacity: 0,
+                                        transition: 'all 0.3s ease-in-out',
+                                        animation: 'bounce 2s ease-in-out infinite',
+                                    },
+                                    '&::after': {
+                                        content: '"✨"',
+                                        position: 'absolute',
+                                        right: '-20px',
+                                        top: '-2px',
+                                        fontSize: '0.9rem',
+                                        animation: 'sparkle 2s ease-in-out infinite',
+                                    },
                                     '&:hover': {
-                                        color: jiraColors.primaryBlue,
+                                        transform: 'scale(1.05) rotate(1deg)',
+                                        backgroundPosition: '100% 0',
+                                        '&::before': {
+                                            opacity: 1,
+                                            left: '-30px',
+                                        },
+                                    },
+                                    '@keyframes gradientShift': {
+                                        '0%, 100%': { backgroundPosition: '0% 50%' },
+                                        '50%': { backgroundPosition: '100% 50%' },
+                                    },
+                                    '@keyframes bounce': {
+                                        '0%, 100%': { transform: 'translateY(-50%) scale(1)' },
+                                        '50%': { transform: 'translateY(-60%) scale(1.1)' },
+                                    },
+                                    '@keyframes sparkle': {
+                                        '0%, 100%': { opacity: 0.3, transform: 'scale(1) rotate(0deg)' },
+                                        '50%': { opacity: 1, transform: 'scale(1.2) rotate(180deg)' },
                                     },
                                 }}
                             >
@@ -1013,7 +1056,39 @@ const Dashboard = () => {
                                         open={Boolean(anchorEl)}
                                         onClose={handleCloseMenu}
                                     >
-                                        <MuiMenuItem onClick={handleLogout}>Logout</MuiMenuItem>
+                                        <MuiMenuItem 
+                                            onClick={handleLogout}
+                                            sx={{
+                                                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+                                                color: 'white',
+                                                fontWeight: 600,
+                                                borderRadius: '8px',
+                                                margin: '4px',
+                                                position: 'relative',
+                                                overflow: 'hidden',
+                                                '&::before': {
+                                                    content: '"👋"',
+                                                    position: 'absolute',
+                                                    left: '8px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    fontSize: '1rem',
+                                                    opacity: 0,
+                                                    transition: 'all 0.3s ease-in-out',
+                                                },
+                                                '&:hover': {
+                                                    background: 'linear-gradient(135deg, #ff5252 0%, #d32f2f 100%)',
+                                                    transform: 'scale(1.02)',
+                                                    paddingLeft: '32px',
+                                                    '&::before': {
+                                                        opacity: 1,
+                                                    },
+                                                },
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            }}
+                                        >
+                                            Logout
+                                        </MuiMenuItem>
                                     </Menu>
                                 </Box>
                             )}
